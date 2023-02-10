@@ -45,10 +45,13 @@ class EntityManager:
                         enemy.alive = False
                         #enemy.kill()
                         #self.enemy_group.remove(enemy)
+                        enemy.animate("dead")
                         bullet.kill()
                 else:
                     if bullet.rect.x <= enemy.rect.x + (enemy.rect.width/2 - 25) and enemy.alive:
-                        enemy.kill()
+                        enemy.alive = False
+                        #enemy.kill()
+                        enemy.animate("dead")
                         bullet.kill()
                         pass
             

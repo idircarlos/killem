@@ -16,8 +16,6 @@ screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
 
 entity_manager = EntityManager(screen,clock)
 
-
-
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
