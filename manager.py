@@ -55,12 +55,12 @@ class EntityManager:
                         bullet.kill()
                         pass
             
-    def update(self):
+    def update(self,dt):
         self.check_collisions()
         self.player_group.draw(self.screen)
-        self.player_group.update()
+        self.player_group.update(dt)
         self.enemy_group.draw(self.screen)
-        self.enemy_group.update()
+        self.enemy_group.update(dt)
         self.bullet_group.draw(self.screen)
-        self.bullet_group.update()
+        self.bullet_group.update(dt)
         self.try_spawn()

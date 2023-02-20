@@ -12,16 +12,15 @@ class Bullet(pygame.sprite.Sprite):
         self.image = self.animations[self.current_animation][self.current_sprite]
         self.dir = -1 if self.orientation is LEFT else 1
         x = player_rect[0] + player_rect[2] if orientation is RIGHT else player_rect[0]
-        print(player_rect)
         y = ((player_rect[1] + player_rect[3]) - player_rect[1])/2 + player_rect[1] + 0
-        print(y)
         self.rect = self.image.get_rect(center = (x,y))
         
-    def update(self):
+    def update(self,dt):
         if self.rect[0] <= 0 - self.rect[2] or self.rect[0] >= SCREEN_WIDTH:
             self.kill()
-        self.rect.x += self.dir*2
-        self.current_sprite += 0.15
+        self.rect.x += self.dir*int(BULLET_VELOCITY*dt)
+        print(self.orientation,self.rect.x)
+        self.current_sprite += 20*dt
         if self.current_sprite >= len(self.animations[self.current_animation]):
             self.current_sprite = 0
             if self.current_animation == "icicle_start":

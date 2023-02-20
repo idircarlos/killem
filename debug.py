@@ -1,6 +1,8 @@
 import pygame
 from util.settings import *
 
+font = pygame.font.SysFont("Arial" , 18 , bold = True)
+
 def degub_tiles(screen):
     surface = screen.convert_alpha()
     surface.fill([0,0,0,0])
@@ -11,3 +13,8 @@ def degub_tiles(screen):
     #pygame.draw.rect(screen,(255,0,0),self.rect,1)
     #pygame.draw.rect(screen,(0,255,0),self.hitbox,1)
     screen.blit(surface,(0,0))
+
+def debug_fps(screen,clock):
+    fps = str(int(clock.get_fps()))
+    fps_t = font.render(fps , 1, pygame.Color("WHITE"))
+    screen.blit(fps_t,(0,0))

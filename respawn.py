@@ -17,7 +17,7 @@ class Spawn:
         self.y = SCREEN_HEIGHT/2
 
         
-    def try_spawn(self):
+    def try_spawn(self):        
         if not self.ready:
             self.cooldown += self.clock.get_time()
         if self.cooldown > RESPAWN_COOLDOWN:

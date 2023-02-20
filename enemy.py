@@ -14,15 +14,15 @@ class Enemy(Entity):
         if not self.is_animating:
             self.animate("attack")
             
-    def update(self):
+    def update(self,dt):
         if not self.alive:
             self.precision_pos = 0
         if self.precision_pos >= 1:
             self.rect.x += self.dir*int(self.precision_pos)
             self.precision_pos = 0
-        self.precision_pos += ENEMY_VELOCITY
+        self.precision_pos += ENEMY_VELOCITY*dt
         if self.is_animating == True or self.current_animation == "walk":
-            self.current_sprite += 0.07
+            self.current_sprite += 13.5*dt
             if self.current_sprite >= len(self.animations[self.current_animation]):
                 self.current_sprite = 0
                 if self.current_animation == 'dead':

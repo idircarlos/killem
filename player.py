@@ -20,12 +20,12 @@ class Player(Entity):
         return False
     
     def flip(self,dir):
-        if self.current_animation is not "block":
+        if self.current_animation != "block":
             super().flip(dir)
         
-    def update(self):
+    def update(self,dt):
         if self.is_animating == True or self.current_animation == "idle":
-            self.current_sprite += 0.1
+            self.current_sprite += 20*dt
             if self.current_sprite >= len(self.animations[self.current_animation]):
                 self.current_sprite = 0
                 if self.current_animation != "idle":
