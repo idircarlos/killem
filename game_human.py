@@ -20,6 +20,8 @@ screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
 entity_manager = EntityManager(screen,clock)
 prev_time = time.time()
 
+font = pygame.font.SysFont("Arial" , 18 , bold = True)
+
 while True:
     # limit framerate
     clock.tick(FPS)
@@ -37,13 +39,16 @@ while True:
                 entity_manager.player_attack()
             elif event.key == pygame.K_b:
                 entity_manager.player_block()
-            if event.key == pygame.K_RIGHT:
+            elif event.key == pygame.K_RIGHT:
                 entity_manager.player_flip(RIGHT)
             elif event.key == pygame.K_LEFT:
                 entity_manager.player_flip(LEFT)
+            elif event.key == pygame.K_f:
+                entity_manager.rotating = True
+                entity_manager.flip_axis()
     screen.fill((30,30,30))
     degub_tiles(screen)
-    debug_fps(screen,clock)
+    debug_fps(screen,clock,font)
     #pygame.draw.rect(screen,(255,0,0),player.rect,1)
     #pygame.draw.rect(screen,(0,255,0),player.hitbox,1)
     entity_manager.update(dt)    

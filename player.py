@@ -3,6 +3,12 @@ from util.settings import *
 from bullet import Bullet
 from entity import Entity
 
+NONE = 0
+FLIP_RIGHT = 1
+FLIP_LEFT = 2
+ATTACK = 3
+BLOCK = 4
+
 class Player(Entity):
     def __init__(self):
         super().__init__(PLAYER_CENTER,PLAYER_HITBOX)
