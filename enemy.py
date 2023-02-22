@@ -34,8 +34,8 @@ class Enemy(Entity):
             
     def update(self,dt):
         if self.rotating:
-            self.angle_animation += 1
-            self.angle = (self.angle - 1) % 360
+            self.angle_animation += 2
+            self.angle = (self.angle - 2) % 360
             center = pygame.math.Vector2((CENTER_X,CENTER_Y)) + pygame.math.Vector2(0, -self.radius).rotate(-self.angle) 
             self.rect = self.image.get_rect(center = (round(center.x), round(center.y)))      
             if self.angle_animation == 90:
