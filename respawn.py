@@ -1,7 +1,4 @@
-import pygame
 from util.settings import *
-from enemy import Enemy
-from rand import Rand
 
 class Spawn:
     def __init__(self,position,clock,rand):
@@ -23,7 +20,6 @@ class Spawn:
             self.x = SCREEN_WIDTH/2
             self.y = SCREEN_HEIGHT + (ENEMY_SPRTE_SIZE_X * ENEMY_SPRITE_MULTIPLIER)
         self.disp = True
-
         
     def try_spawn(self):
         #if not self.disp or self.position == TOP or self.position == BOTTOM or self.position == LEFT:
@@ -34,7 +30,7 @@ class Spawn:
             self.cooldown = 0
         if self.cooldown == 0 and self._rand_spawn():
             self.ready = False
-            #self.disp = False
+        #    self.disp = False
             return True
         elif self.cooldown == 0:
             self.ready = True

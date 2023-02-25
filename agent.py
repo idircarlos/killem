@@ -10,6 +10,9 @@ MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
 LR = 0.001
 
+UP = "\x1B[1A" # Moves up 21 times for \r
+CLR = "\x1B[0K" # Clears
+
 class Agent:
 
     def __init__(self):
@@ -17,14 +20,24 @@ class Agent:
         self.epsilon = 0 # randomness
         self.gamma = 0.9 # discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        self.model = Linear_QNet(5, 256, 4)
+        self.model = Linear_QNet(8, 256, 4)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
 
-    def get_state(self, game):
-        state = [False, False, False, False, False]
+    def get_state(self, game: Game):
+        player_orientation = game.entity_manager.player.orientation
+        bullet_left, bullet_right = game.entity_manager.get_bullets_positions()
+        enemy_left, enemy_right = game.entity_manager.get_enemies_positions()
+        enemy_left_danger, enemy_right_danger = game.entity_manager.get_enemies_danger()
+        cds = game.entity_manager.player.get_cooldowns()
+        state = [player_orientation,
+                 bullet_left, bullet_right,
+                 enemy_left, enemy_right,
+                 enemy_left_danger,enemy_right_danger,
+                 cds[1]]
         
         #print(np.array(state, dtype=int))
+        print(f"{UP}{np.array(state, dtype=int)}{CLR}")
         return np.array(state, dtype=int)
 
     def remember(self, state, action, reward, next_state, done):

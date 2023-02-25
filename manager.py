@@ -4,16 +4,16 @@ from enemy  import *
 from bullet import *
 from respawn import *
 from rand import Rand
-import math
+from debug import *
 
 PLAYER_DEAD = 0
 ENEMY_DEAD  = 1
 
 class EntityManager:
-    def __init__(self,screen,clock):
+    def __init__(self,screen,clock,assets):
         self.screen = screen
         self.rand = Rand()
-        self.player = Player()
+        self.player = Player(assets["player"])
         self.player_group = pygame.sprite.Group()
         self.player_group.add(self.player)
         self.bullet_group = pygame.sprite.Group()
@@ -23,28 +23,35 @@ class EntityManager:
         self.bottom_respawn  = Spawn(BOTTOM,clock,self.rand)
         self.enemy_group = pygame.sprite.Group()
         self.clock = clock
+        self.font = pygame.font.SysFont("Arial" , 18 , bold = True)
+        self.assets = assets
         
     def flip_axis(self):
         for enemy in self.enemy_group:
-            enemy.radius = int(sqrt(pow(abs(CENTER_X - (enemy.rect.x + enemy.rect.width/2)),2) + pow(abs(CENTER_Y - (enemy.rect.y + enemy.rect.height/2)),2)))
-            enemy.rotating = True
+            enemy.rotate()
         
     def player_action(self,action_list):
         selected = max(action_list)
         action = action_list.index(selected)
-        if action == FLIP_RIGHT:
-            self.player_flip(RIGHT)
-        if action == FLIP_LEFT:
+        if action == SHOOT:
+            if self.player.skill_ready(SHOOT):
+                self.player.use_skill(SHOOT)
+                self.player_attack()
+        elif action == FLIP_LEFT:
             self.player_flip(LEFT)
-        elif action == ATTACK:
-            self.player_attack()
+        elif action == FLIP_RIGHT:
+            self.player_flip(RIGHT)
+        elif action == ROTATE:
+            if self.player.skill_ready(ROTATE):
+                self.player.use_skill(ROTATE)
+                self.flip_axis()
         elif action == BLOCK:
             self.player_block()
         
     def player_attack(self):
         can_attack = self.player.attack()
         if can_attack:
-            self.bullet_group.add(Bullet(self.player.hitbox,self.player.orientation))
+            self.bullet_group.add(Bullet(self.player.hitbox,self.player.orientation,self.assets["bullet"]))
             
     def player_block(self):
         if not self.player.is_animating:
@@ -55,41 +62,73 @@ class EntityManager:
             
     def try_spawn(self):
         if self.left_respawn.try_spawn():
-            self.enemy_group.add(Enemy((self.left_respawn.x,self.left_respawn.y),(0,0,0,0),LEFT))
+            self.enemy_group.add(Enemy((self.left_respawn.x,self.left_respawn.y),(0,0,0,0),self.assets["enemy"],LEFT))
         if self.right_respawn.try_spawn():
-            self.enemy_group.add(Enemy((self.right_respawn.x,self.right_respawn.y),(0,0,0,0),RIGHT))
+            self.enemy_group.add(Enemy((self.right_respawn.x,self.right_respawn.y),(0,0,0,0),self.assets["enemy"],RIGHT))
         if self.top_respawn.try_spawn():
-            self.enemy_group.add(Enemy((self.top_respawn.x,self.top_respawn.y),(0,0,0,0),TOP))
+            self.enemy_group.add(Enemy((self.top_respawn.x,self.top_respawn.y),(0,0,0,0),self.assets["enemy"],TOP))
         if self.bottom_respawn.try_spawn():
-            self.enemy_group.add(Enemy((self.bottom_respawn.x,self.bottom_respawn.y),(0,0,0,0),BOTTOM))
+            self.enemy_group.add(Enemy((self.bottom_respawn.x,self.bottom_respawn.y),(0,0,0,0),self.assets["enemy"],BOTTOM))
+    
+    def get_enemies_positions(self):
+        left  = False
+        right = False
+        for enemy in self.enemy_group:
+            if enemy.spawn == RIGHT and enemy.rect.x <= SCREEN_WIDTH - 1 and enemy.alive:
+                right = True
+            elif enemy.spawn == LEFT and enemy.rect.x + enemy.rect.width >= 1 and enemy.alive:
+                left = True
+        return left, right
+    
+    def get_bullets_positions(self):
+        left  = False
+        right = False
+        for bullet in self.bullet_group:
+            if bullet.orientation == RIGHT:
+                right = True
+            else:
+                left = True
+        return left, right
             
     def check_collisions(self):
         for bullet in self.bullet_group:
             for enemy in self.enemy_group:
                 if enemy.orientation == LEFT:
                     if pygame.Rect.colliderect(bullet.rect,enemy.rect) and bullet.rect.x + bullet.rect.width >= enemy.rect.x + int(enemy.rect.width/2 + 25) and (enemy.spawn != TOP and enemy.spawn != BOTTOM) and enemy.alive:
-                        print("arriba",bullet.rect.x, enemy.rect.x)
                         enemy.alive = False
                         #enemy.kill()
                         #self.enemy_group.remove(enemy)
                         enemy.animate("dead")
                         bullet.kill()
+                        #print(str(round(bullet.timer,5)))
                         return ENEMY_DEAD
                 else:
                     if pygame.Rect.colliderect(bullet.rect,enemy.rect) and bullet.rect.x <= enemy.rect.x + int(enemy.rect.width/2 - 25) and (enemy.spawn != TOP and enemy.spawn != BOTTOM) and enemy.alive:
-                        print("abajo",bullet.rect.x, enemy.rect.x)
                         enemy.alive = False
                         #enemy.kill()
                         enemy.animate("dead")
                         bullet.kill()
+                        #print(str(round(bullet.timer,5)))
                         return ENEMY_DEAD
         for enemy in self.enemy_group:
-            if enemy.rect.x == self.player.rect.x and enemy.rect.y == self.player.rect.y:
+            if pygame.Rect.colliderect(self.player.hitbox,enemy.rect):
                 print("GAME OVER")
                 self.player.kill()
                 return PLAYER_DEAD
             
+    def get_enemies_danger(self):
+        left  = False
+        right = False
+        for enemy in self.enemy_group:
+            if enemy.spawn == RIGHT and enemy.rect.x <= DANGER_ZONE_RIGHT and enemy.alive:
+                right = True
+            elif enemy.spawn == LEFT and enemy.rect.x + enemy.rect.width >= DANGER_ZONE_LEFT and enemy.alive:
+                left = True
+        return left, right
+            
     def update(self,dt):
+        if TRAINING:
+            dt = 1
         self.check_collisions()
         self.player_group.draw(self.screen)
         self.player_group.update(dt)
@@ -98,7 +137,9 @@ class EntityManager:
         self.bullet_group.draw(self.screen)
         self.bullet_group.update(dt)
         self.try_spawn()
-        #pygame.draw.rect(self.screen,(0,255,0),self.player.hitbox,1)
+        #pygame.draw.rect(self.screen,(0,255,0),self.player.rect,1)
+        pygame.draw.line(self.screen,(0,255,0),(DANGER_ZONE_LEFT,0),(DANGER_ZONE_LEFT,SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(0,255,0),(DANGER_ZONE_RIGHT,0),(DANGER_ZONE_RIGHT,SCREEN_HEIGHT),1)
         for enemy in self.enemy_group:
             #pygame.draw.rect(self.screen,(255,0,0),enemy.rect,1)
             #pygame.draw.circle(self.screen,(0,0,255),(enemy.rect.x,enemy.rect.y),10,20)
@@ -114,4 +155,5 @@ class EntityManager:
         for sprite in self.enemy_group:
             sprite.kill()
         for sprite in self.bullet_group:
-            sprite.kill() 
+            sprite.kill()
+            print(str(round(sprite.timer,5)))

@@ -14,5 +14,9 @@ def degub_tiles(screen):
 
 def debug_fps(screen,clock,font):
     fps = str(int(clock.get_fps()))
-    fps_t = font.render(fps , 1, pygame.Color("WHITE"))
-    screen.blit(fps_t,(0,0))
+    fps_f = font.render(fps , 1, pygame.Color("WHITE"))
+    screen.blit(fps_f,(SCREEN_WIDTH-30,0))
+    
+def debug_time(screen,time,font):
+    record_text = font.render("Time: " +str(round(time,5)), False, (255,255,255))
+    screen.blit(record_text, (0,100))
