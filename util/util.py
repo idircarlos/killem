@@ -2,6 +2,17 @@ import pygame
 from os import walk
 from util.settings import *
 
+class TerminalColor:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 def import_folder(path,dimension,orientation=RIGHT):
     surface_list = []
     for _,__,image_files in walk(path):

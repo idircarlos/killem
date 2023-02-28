@@ -4,12 +4,13 @@ from util.util import import_player_assets, import_enemy_assets, import_bullet_a
 from manager import EntityManager
 import sys
 from debug import *
+from player import *
 
 PLAYER_DEAD = 0
 ENEMY_DEAD  = 1
 
 class Game():
-    def __init__(self):
+    def __init__(self,agent=None):
         pygame.init()
         self.clock = pygame.time.Clock()
         self.screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
@@ -21,6 +22,7 @@ class Game():
         enemy_assets  = import_enemy_assets()
         bullet_assets = import_bullet_assets()
         self.assets = {"player":player_assets,"enemy":enemy_assets,"bullet":bullet_assets}
+        self.agent = agent
         self.reset()
         
     def reset(self):
@@ -50,16 +52,22 @@ class Game():
                     action[3] = 1
                 elif event.key == pygame.K_f:
                     action[4] = 1
+                elif event.key == pygame.K_s:
+                    if self.agent != None:
+                        self.agent.save_checkpoint(False, "./model/manual", "./model/best2")
+                    
+        shoot_ready = self.entity_manager.player.skill_ready(SHOOT)
+        
         # 2. action
         self.entity_manager.player_action(action)
         
         # 3. check if game over
         reward = 0
         game_over = False
-        collision = self.entity_manager.check_collisions() 
+        collision, danger_zone = self.entity_manager.check_collisions() 
         if collision == PLAYER_DEAD:
             game_over = True
-            reward = -10
+            reward = -100
             return reward, game_over, self.score
 
         # 4. create a new enemy
@@ -69,13 +77,34 @@ class Game():
         # 5. check if the player has killed an enemy
         if collision == ENEMY_DEAD:
             self.score += 1
-            reward = 10
-            
-        # 6. update ui and clock
+            if danger_zone == DANGER_ZONE_LEFT_0 or danger_zone == DANGER_ZONE_RIGHT_0:
+                reward = 10
+            elif danger_zone == DANGER_ZONE_LEFT_1 or danger_zone == DANGER_ZONE_RIGHT_1:
+                reward = 11
+            elif danger_zone == DANGER_ZONE_LEFT_2 or danger_zone == DANGER_ZONE_RIGHT_2:
+                reward = 12
+            elif danger_zone == DANGER_ZONE_LEFT_3 or danger_zone == DANGER_ZONE_RIGHT_3:
+                reward = 14
+            elif danger_zone == DANGER_ZONE_LEFT_4 or danger_zone == DANGER_ZONE_RIGHT_4:
+                reward = 20
+                
+        # 6. check if the player shots without enemy
+        selected = max(action)
+        action_index = action.index(selected)
+        if action_index == SHOOT:
+            if not shoot_ready:
+                reward = -1
+            else:
+                left,right = self.entity_manager.get_enemies_positions()
+                if (self.entity_manager.player.orientation == LEFT and left == False and right == True) or (self.entity_manager.player.orientation == RIGHT and right == False and left == True):
+                    reward = -20
+                else:
+                    reward += 10
+        # 8. update ui and clock
         self._update_ui()
         self.clock.tick(FPS)
         
-        # 7. return game over and score
+        # 9. return game over and score
         return reward, game_over, self.score
     
     def _update_ui(self):

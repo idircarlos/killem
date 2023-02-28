@@ -93,38 +93,89 @@ class EntityManager:
     def check_collisions(self):
         for bullet in self.bullet_group:
             for enemy in self.enemy_group:
-                if enemy.orientation == LEFT:
+                if enemy.spawn == RIGHT:
                     if pygame.Rect.colliderect(bullet.rect,enemy.rect) and bullet.rect.x + bullet.rect.width >= enemy.rect.x + int(enemy.rect.width/2 + 25) and (enemy.spawn != TOP and enemy.spawn != BOTTOM) and enemy.alive:
+                        danger_zone = 0
+                        if self.enemy_in_danger_zone(enemy,DANGER_ZONE_RIGHT_4):
+                            danger_zone = DANGER_ZONE_RIGHT_4
+                        elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_RIGHT_3):
+                            danger_zone = DANGER_ZONE_RIGHT_3
+                        elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_RIGHT_2):
+                            danger_zone = DANGER_ZONE_RIGHT_2
+                        elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_RIGHT_1):
+                            danger_zone = DANGER_ZONE_RIGHT_1
+                        elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_RIGHT_0):
+                            danger_zone = DANGER_ZONE_RIGHT_0
                         enemy.alive = False
                         #enemy.kill()
                         #self.enemy_group.remove(enemy)
                         enemy.animate("dead")
                         bullet.kill()
                         #print(str(round(bullet.timer,5)))
-                        return ENEMY_DEAD
+                        return ENEMY_DEAD, danger_zone
                 else:
                     if pygame.Rect.colliderect(bullet.rect,enemy.rect) and bullet.rect.x <= enemy.rect.x + int(enemy.rect.width/2 - 25) and (enemy.spawn != TOP and enemy.spawn != BOTTOM) and enemy.alive:
+                        danger_zone = 0
+                        if self.enemy_in_danger_zone(enemy,DANGER_ZONE_LEFT_4):
+                            danger_zone = DANGER_ZONE_LEFT_4
+                        elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_LEFT_3):
+                            danger_zone = DANGER_ZONE_LEFT_3
+                        elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_LEFT_2):
+                            danger_zone = DANGER_ZONE_LEFT_2
+                        elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_LEFT_1):
+                            danger_zone = DANGER_ZONE_LEFT_1
+                        elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_LEFT_0):
+                            danger_zone = DANGER_ZONE_LEFT_0
                         enemy.alive = False
                         #enemy.kill()
                         enemy.animate("dead")
                         bullet.kill()
                         #print(str(round(bullet.timer,5)))
-                        return ENEMY_DEAD
+                        return ENEMY_DEAD, danger_zone
         for enemy in self.enemy_group:
             if pygame.Rect.colliderect(self.player.hitbox,enemy.rect):
                 print("GAME OVER")
                 self.player.kill()
-                return PLAYER_DEAD
+                return PLAYER_DEAD, -1
+        return None, -1
+            
+    def enemy_in_danger_zone(self,enemy,danger_zone):
+        spawn = enemy.spawn
+        if spawn == RIGHT:
+            if enemy.rect.x <= danger_zone:
+                return True
+        elif spawn == LEFT:
+            if enemy.rect.x + enemy.rect.width >= danger_zone:
+                return True
+        return False
             
     def get_enemies_danger(self):
-        left  = False
-        right = False
+        danger_left  = {DANGER_ZONE_LEFT_0:False,DANGER_ZONE_LEFT_1:False,DANGER_ZONE_LEFT_2:False,DANGER_ZONE_LEFT_3:False,DANGER_ZONE_LEFT_4:False}
+        danger_right = {DANGER_ZONE_RIGHT_0:False,DANGER_ZONE_RIGHT_1:False,DANGER_ZONE_RIGHT_2:False,DANGER_ZONE_RIGHT_3:False,DANGER_ZONE_RIGHT_4:False}
         for enemy in self.enemy_group:
-            if enemy.spawn == RIGHT and enemy.rect.x <= DANGER_ZONE_RIGHT and enemy.alive:
-                right = True
-            elif enemy.spawn == LEFT and enemy.rect.x + enemy.rect.width >= DANGER_ZONE_LEFT and enemy.alive:
-                left = True
-        return left, right
+            if enemy.spawn == RIGHT and enemy.alive:
+                if self.enemy_in_danger_zone(enemy,DANGER_ZONE_RIGHT_4):
+                    danger_right[DANGER_ZONE_RIGHT_4] = True
+                elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_RIGHT_3):
+                    danger_right[DANGER_ZONE_RIGHT_3] = True
+                elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_RIGHT_2):
+                    danger_right[DANGER_ZONE_RIGHT_2] = True
+                elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_RIGHT_1):
+                    danger_right[DANGER_ZONE_RIGHT_1] = True
+                elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_RIGHT_0):
+                    danger_right[DANGER_ZONE_RIGHT_0] = True
+            elif enemy.spawn == LEFT and enemy.alive:
+                if self.enemy_in_danger_zone(enemy,DANGER_ZONE_LEFT_4):
+                    danger_left[DANGER_ZONE_LEFT_4] = True
+                elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_LEFT_3):
+                    danger_left[DANGER_ZONE_LEFT_3] = True
+                elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_LEFT_2):
+                    danger_left[DANGER_ZONE_LEFT_2] = True
+                elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_LEFT_1):
+                    danger_left[DANGER_ZONE_LEFT_1] = True
+                elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_LEFT_0):
+                    danger_left[DANGER_ZONE_LEFT_0] = True
+        return danger_left, danger_right
             
     def update(self,dt):
         if TRAINING:
@@ -138,8 +189,17 @@ class EntityManager:
         self.bullet_group.update(dt)
         self.try_spawn()
         #pygame.draw.rect(self.screen,(0,255,0),self.player.rect,1)
-        pygame.draw.line(self.screen,(0,255,0),(DANGER_ZONE_LEFT,0),(DANGER_ZONE_LEFT,SCREEN_HEIGHT),1)
-        pygame.draw.line(self.screen,(0,255,0),(DANGER_ZONE_RIGHT,0),(DANGER_ZONE_RIGHT,SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(255,255,255),(DANGER_ZONE_LEFT_0,0),(DANGER_ZONE_LEFT_0,SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(255,255,255),(DANGER_ZONE_RIGHT_0-1,0),(DANGER_ZONE_RIGHT_0-1,SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(0,255,255),(DANGER_ZONE_RIGHT_1,0),(DANGER_ZONE_RIGHT_1,SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(0,255,255),(DANGER_ZONE_LEFT_1,0),(DANGER_ZONE_LEFT_1,SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(0,255,255),(DANGER_ZONE_RIGHT_1,0),(DANGER_ZONE_RIGHT_1,SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(0,255,0),(DANGER_ZONE_LEFT_2,0),(DANGER_ZONE_LEFT_2,SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(0,255,0),(DANGER_ZONE_RIGHT_2,0),(DANGER_ZONE_RIGHT_2,SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(255,255,0),(DANGER_ZONE_LEFT_3,0),(DANGER_ZONE_LEFT_3,SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(255,255,0),(DANGER_ZONE_RIGHT_3,0),(DANGER_ZONE_RIGHT_3,SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(255,0,0),(DANGER_ZONE_LEFT_4,0),(DANGER_ZONE_LEFT_4,SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(255,0,0),(DANGER_ZONE_RIGHT_4,0),(DANGER_ZONE_RIGHT_4,SCREEN_HEIGHT),1)
         for enemy in self.enemy_group:
             #pygame.draw.rect(self.screen,(255,0,0),enemy.rect,1)
             #pygame.draw.circle(self.screen,(0,0,255),(enemy.rect.x,enemy.rect.y),10,20)
