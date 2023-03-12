@@ -3,6 +3,7 @@ from util.settings import *
 from bullet import Bullet
 from entity import Entity
 from skill import Skill
+from mixer import Sound
 
 NONE = 0
 SHOOT = 1

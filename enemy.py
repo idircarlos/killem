@@ -2,6 +2,7 @@ from util.util import *
 from util.settings import *
 from entity import Entity
 from math import sqrt
+from mixer import Sound
 
 class Enemy(Entity):
     def __init__(self,center,hitbox,assets,spawn):

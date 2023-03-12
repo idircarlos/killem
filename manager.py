@@ -5,6 +5,7 @@ from bullet import *
 from respawn import *
 from rand import Rand
 from debug import *
+from mixer import GLOBAL_MIXER, SHOOT_SOUND, ENEMY_DEATH_SOUND
 
 PLAYER_DEAD = 0
 ENEMY_DEAD  = 1
@@ -52,6 +53,7 @@ class EntityManager:
         can_attack = self.player.attack()
         if can_attack:
             self.bullet_group.add(Bullet(self.player.hitbox,self.player.orientation,self.assets["bullet"]))
+            GLOBAL_MIXER.play(SHOOT_SOUND)
             
     def player_block(self):
         if not self.player.is_animating:
@@ -107,6 +109,7 @@ class EntityManager:
                         elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_RIGHT_0):
                             danger_zone = DANGER_ZONE_RIGHT_0
                         enemy.alive = False
+                        GLOBAL_MIXER.play(ENEMY_DEATH_SOUND)
                         #enemy.kill()
                         #self.enemy_group.remove(enemy)
                         enemy.animate("dead")
@@ -127,6 +130,7 @@ class EntityManager:
                         elif self.enemy_in_danger_zone(enemy,DANGER_ZONE_LEFT_0):
                             danger_zone = DANGER_ZONE_LEFT_0
                         enemy.alive = False
+                        GLOBAL_MIXER.play(ENEMY_DEATH_SOUND)
                         #enemy.kill()
                         enemy.animate("dead")
                         bullet.kill()

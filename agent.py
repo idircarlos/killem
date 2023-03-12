@@ -64,7 +64,7 @@ class Agent:
         #print(np.array(state, dtype=int))
         #print(f"{UP}{np.array(state, dtype=int)}{CLR}")
         array_state = np.array(state, dtype=int)
-        #print_state(array_state)
+        print_state(array_state)
         return array_state
 
     def remember(self, state, action, reward, next_state, done):
@@ -146,7 +146,8 @@ def train():
         state_new = agent.get_state(game)
         
         if reward != 0:
-            print(reward)
+            #print(reward)
+            pass
 
         # train short memory
         agent.train_short_memory(state_old, final_move, reward, state_new, done)

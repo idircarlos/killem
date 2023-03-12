@@ -5,6 +5,7 @@ from manager import EntityManager
 import sys
 from debug import *
 from player import *
+from mixer import GLOBAL_MIXER
 
 PLAYER_DEAD = 0
 ENEMY_DEAD  = 1
@@ -32,6 +33,8 @@ class Game():
         self.frame = 0
         self.score = 0
         self.prev_time = time.time()
+        GLOBAL_MIXER.clear_queue()
+        GLOBAL_MIXER.start_loop_bg_music()
         
     def spawn_enemy(self):
         self.entity_manager.try_spawn()
@@ -52,6 +55,8 @@ class Game():
                     action[3] = 1
                 elif event.key == pygame.K_f:
                     action[4] = 1
+                elif event.key == pygame.K_m:
+                    pass
                 elif event.key == pygame.K_s:
                     if self.agent != None:
                         self.agent.save_checkpoint(False, "./model/manual", "./model/best2")
@@ -122,10 +127,18 @@ class Game():
         self.prev_time = self.now_time
         self.entity_manager.update(dt)    
         pygame.display.flip()
+        GLOBAL_MIXER.play_next_bg_music_if_needed()
         
     def show_score(self):
         score = str(self.score)
         score_f = self.font.render(score, 1, pygame.Color("WHITE"))
         self.screen.blit(score_f,(0,0))
+        
+    def toggle_mute(self):
+        pass
+    
+
+        
+        
 
     
