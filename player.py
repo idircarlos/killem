@@ -15,7 +15,7 @@ BLOCK = 5
 class Player(Entity):
     def __init__(self,assets):
         super().__init__(PLAYER_CENTER,PLAYER_HITBOX,assets)
-        self.skills = {ROTATE:Skill(ROTATE,ROTATE_COOLDOWN),SHOOT:Skill(SHOOT,SHOOT_COOLDOWN)}
+        self.skills = {ROTATE:Skill(ROTATE,ROTATE_COOLDOWN),SHOOT:Skill(SHOOT,SHOOT_COOLDOWN),BLOCK:Skill(BLOCK,BLOCK_COOLDOWN)}
         self.hitbox = pygame.Rect(self.hitbox)
         
     def skill_ready(self,skill):
@@ -31,10 +31,7 @@ class Player(Entity):
         return False
     
     def block(self):
-        if not self.is_animating:
-            self.animate("block")
-            return True
-        return False
+        return True
     
     def flip(self,dir):
         if self.current_animation != "block":

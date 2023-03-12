@@ -2,6 +2,7 @@ import pygame
 from player import *
 from enemy  import *
 from bullet import *
+from shield import *
 from respawn import *
 from rand import Rand
 from debug import *
@@ -18,6 +19,7 @@ class EntityManager:
         self.player_group = pygame.sprite.Group()
         self.player_group.add(self.player)
         self.bullet_group = pygame.sprite.Group()
+        self.shield_group = pygame.sprite.Group()
         self.left_respawn  = Spawn(LEFT,clock,self.rand)
         self.right_respawn  = Spawn(RIGHT,clock,self.rand)
         self.top_respawn  = Spawn(TOP,clock,self.rand)
@@ -47,7 +49,9 @@ class EntityManager:
                 self.player.use_skill(ROTATE)
                 self.flip_axis()
         elif action == BLOCK:
-            self.player_block()
+            if self.player.skill_ready(BLOCK):
+                self.player.use_skill(BLOCK)
+                self.player_block()
         
     def player_attack(self):
         can_attack = self.player.attack()
@@ -56,7 +60,9 @@ class EntityManager:
             GLOBAL_MIXER.play(SHOOT_SOUND)
             
     def player_block(self):
-        if not self.player.is_animating:
+        can_block = self.player.block()
+        if can_block:
+            self.shield_group.add(Shield(self.player.orientation,self.assets["block"]))
             self.player.block()
         
     def player_flip(self,dir):
@@ -190,6 +196,8 @@ class EntityManager:
         self.enemy_group.update(dt)
         self.bullet_group.draw(self.screen)
         self.bullet_group.update(dt)
+        self.shield_group.draw(self.screen)
+        self.shield_group.update(dt)
         self.try_spawn()
         #pygame.draw.rect(self.screen,(0,255,0),self.player.rect,1)
         pygame.draw.line(self.screen,(255,255,255),(DANGER_ZONE_LEFT_0,0),(DANGER_ZONE_LEFT_0,BATTLE_SCREEN_HEIGHT),1)
@@ -211,6 +219,8 @@ class EntityManager:
             #pygame.draw.line(self.screen,(0,255,255),(CENTER_X,CENTER_Y),(SCREEN_WIDTH,SCREEN_HEIGHT/2))
             pass
         #pygame.draw.circle(self.screen,(0,0,255),(CENTER_X,CENTER_Y),10,20)
+        for shield in self.shield_group:
+            pygame.draw.rect(self.screen,(0,255,255),shield.hitbox,1)
         
     def free(self):
         for sprite in self.player_group:

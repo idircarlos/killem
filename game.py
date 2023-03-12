@@ -23,7 +23,8 @@ class Game():
         player_assets = import_player_assets()
         enemy_assets  = import_enemy_assets()
         bullet_assets = import_bullet_assets()
-        self.assets = {"player":player_assets,"enemy":enemy_assets,"bullet":bullet_assets}
+        shield_assets = import_shield_assets()
+        self.assets = {"player":player_assets,"enemy":enemy_assets,"bullet":bullet_assets,"block":shield_assets}
         self.agent = agent
         self.gamepad = self.scan_gamepad()
         self.reset()
@@ -51,7 +52,7 @@ class Game():
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE or event.button == 0:
+                if event.key == pygame.K_SPACE:
                     action[1] = 1
                 elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                     action[2] = 1
@@ -59,6 +60,8 @@ class Game():
                     action[3] = 1
                 elif event.key == pygame.K_f:
                     action[4] = 1
+                elif event.key == pygame.K_b:
+                    action[5] = 1
                 elif event.key == pygame.K_m:
                     GLOBAL_MIXER.mute()
                 elif event.key == pygame.K_o:
@@ -70,6 +73,8 @@ class Game():
             if event.type == pygame.JOYBUTTONDOWN:
                 if event.button == pygame.CONTROLLER_BUTTON_A:
                     action[1] = 1
+                if event.button == pygame.CONTROLLER_BUTTON_X:
+                    action[5] = 1
             if event.type == pygame.JOYHATMOTION:
                 if event.value == (1,0):
                     action[2] = 1

@@ -30,20 +30,28 @@ def load_sprite(path,dimension,orientation):
 def import_player_assets():
     animations = {'idle':[],'attack':[],'block':[]}
     for animation in animations.keys():
-        full_path = SPRITES_PATH + "player/" +  animation
+        full_path = SPRITES_PATH + "player/" + animation
         animations[animation] = import_folder(full_path,(PLAYER_SPRITE_SIZE_X*2,PLAYER_SPRITE_SIZE_Y*2))
     return animations
             
 def import_enemy_assets():
     animations = {'idle':[],'walk':[],'dead':[]}
     for animation in animations.keys():
-        full_path = SPRITES_PATH + "enemy/" +  animation
+        full_path = SPRITES_PATH + "enemy/" + animation
         animations[animation] = import_folder(full_path,(ENEMY_SPRTE_SIZE_X*ENEMY_SPRITE_MULTIPLIER,ENEMY_SPRTE_SIZE_Y*ENEMY_SPRITE_MULTIPLIER))
     return animations
             
 def import_bullet_assets():
     animations = {'icicle_start':[],'icicle':[]}
     for animation in animations.keys():
-        full_path = SPRITES_PATH + "bullet/" +  animation
+        full_path = SPRITES_PATH + "bullet/" + animation
         animations[animation] = import_folder(full_path, (BULLET_SPRITE_SIZE_X,BULLET_SPRITE_SIZE_Y))
+    return animations
+
+def import_shield_assets():
+    animations = {'block':[]}
+    for animation in animations.keys():
+        full_path = SPRITES_PATH + animation
+        animations[animation] = import_folder(full_path, (PLAYER_SPRITE_SIZE_X*2,PLAYER_SPRITE_SIZE_Y*2))
+        print(full_path)
     return animations
