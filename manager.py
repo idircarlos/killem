@@ -76,7 +76,7 @@ class EntityManager:
         left  = False
         right = False
         for enemy in self.enemy_group:
-            if enemy.spawn == RIGHT and enemy.rect.x <= SCREEN_WIDTH - 1 and enemy.alive:
+            if enemy.spawn == RIGHT and enemy.rect.x <= BATTLE_SCREEN_WIDTH - 1 and enemy.alive:
                 right = True
             elif enemy.spawn == LEFT and enemy.rect.x + enemy.rect.width >= 1 and enemy.alive:
                 left = True
@@ -138,7 +138,6 @@ class EntityManager:
                         return ENEMY_DEAD, danger_zone
         for enemy in self.enemy_group:
             if pygame.Rect.colliderect(self.player.hitbox,enemy.rect):
-                print("GAME OVER")
                 self.player.kill()
                 return PLAYER_DEAD, -1
         return None, -1
@@ -193,17 +192,17 @@ class EntityManager:
         self.bullet_group.update(dt)
         self.try_spawn()
         #pygame.draw.rect(self.screen,(0,255,0),self.player.rect,1)
-        pygame.draw.line(self.screen,(255,255,255),(DANGER_ZONE_LEFT_0,0),(DANGER_ZONE_LEFT_0,SCREEN_HEIGHT),1)
-        pygame.draw.line(self.screen,(255,255,255),(DANGER_ZONE_RIGHT_0-1,0),(DANGER_ZONE_RIGHT_0-1,SCREEN_HEIGHT),1)
-        pygame.draw.line(self.screen,(0,255,255),(DANGER_ZONE_RIGHT_1,0),(DANGER_ZONE_RIGHT_1,SCREEN_HEIGHT),1)
-        pygame.draw.line(self.screen,(0,255,255),(DANGER_ZONE_LEFT_1,0),(DANGER_ZONE_LEFT_1,SCREEN_HEIGHT),1)
-        pygame.draw.line(self.screen,(0,255,255),(DANGER_ZONE_RIGHT_1,0),(DANGER_ZONE_RIGHT_1,SCREEN_HEIGHT),1)
-        pygame.draw.line(self.screen,(0,255,0),(DANGER_ZONE_LEFT_2,0),(DANGER_ZONE_LEFT_2,SCREEN_HEIGHT),1)
-        pygame.draw.line(self.screen,(0,255,0),(DANGER_ZONE_RIGHT_2,0),(DANGER_ZONE_RIGHT_2,SCREEN_HEIGHT),1)
-        pygame.draw.line(self.screen,(255,255,0),(DANGER_ZONE_LEFT_3,0),(DANGER_ZONE_LEFT_3,SCREEN_HEIGHT),1)
-        pygame.draw.line(self.screen,(255,255,0),(DANGER_ZONE_RIGHT_3,0),(DANGER_ZONE_RIGHT_3,SCREEN_HEIGHT),1)
-        pygame.draw.line(self.screen,(255,0,0),(DANGER_ZONE_LEFT_4,0),(DANGER_ZONE_LEFT_4,SCREEN_HEIGHT),1)
-        pygame.draw.line(self.screen,(255,0,0),(DANGER_ZONE_RIGHT_4,0),(DANGER_ZONE_RIGHT_4,SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(255,255,255),(DANGER_ZONE_LEFT_0,0),(DANGER_ZONE_LEFT_0,BATTLE_SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(255,255,255),(DANGER_ZONE_RIGHT_0-1,0),(DANGER_ZONE_RIGHT_0-1,BATTLE_SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(0,255,255),(DANGER_ZONE_RIGHT_1,0),(DANGER_ZONE_RIGHT_1,BATTLE_SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(0,255,255),(DANGER_ZONE_LEFT_1,0),(DANGER_ZONE_LEFT_1,BATTLE_SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(0,255,255),(DANGER_ZONE_RIGHT_1,0),(DANGER_ZONE_RIGHT_1,BATTLE_SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(0,255,0),(DANGER_ZONE_LEFT_2,0),(DANGER_ZONE_LEFT_2,BATTLE_SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(0,255,0),(DANGER_ZONE_RIGHT_2,0),(DANGER_ZONE_RIGHT_2,BATTLE_SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(255,255,0),(DANGER_ZONE_LEFT_3,0),(DANGER_ZONE_LEFT_3,BATTLE_SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(255,255,0),(DANGER_ZONE_RIGHT_3,0),(DANGER_ZONE_RIGHT_3,BATTLE_SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(255,0,0),(DANGER_ZONE_LEFT_4,0),(DANGER_ZONE_LEFT_4,BATTLE_SCREEN_HEIGHT),1)
+        pygame.draw.line(self.screen,(255,0,0),(DANGER_ZONE_RIGHT_4,0),(DANGER_ZONE_RIGHT_4,BATTLE_SCREEN_HEIGHT),1)
         for enemy in self.enemy_group:
             #pygame.draw.rect(self.screen,(255,0,0),enemy.rect,1)
             #pygame.draw.circle(self.screen,(0,0,255),(enemy.rect.x,enemy.rect.y),10,20)

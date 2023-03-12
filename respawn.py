@@ -9,16 +9,16 @@ class Spawn:
         self.ready = True if self.cooldown == 0 else False
         if self.position == LEFT:
             self.x = -ENEMY_SPRTE_SIZE_X * ENEMY_SPRITE_MULTIPLIER
-            self.y = SCREEN_HEIGHT/2
+            self.y = BATTLE_SCREEN_HEIGHT/2
         elif self.position == RIGHT:
-            self.x = SCREEN_WIDTH + (ENEMY_SPRTE_SIZE_X * ENEMY_SPRITE_MULTIPLIER)
-            self.y = SCREEN_HEIGHT/2
+            self.x = BATTLE_SCREEN_WIDTH + (ENEMY_SPRTE_SIZE_X * ENEMY_SPRITE_MULTIPLIER)
+            self.y = BATTLE_SCREEN_HEIGHT/2
         elif self.position == TOP:
-            self.x = SCREEN_WIDTH/2
+            self.x = BATTLE_SCREEN_WIDTH/2
             self.y = -ENEMY_SPRTE_SIZE_X * ENEMY_SPRITE_MULTIPLIER
         elif self.position == BOTTOM:
-            self.x = SCREEN_WIDTH/2
-            self.y = SCREEN_HEIGHT + (ENEMY_SPRTE_SIZE_X * ENEMY_SPRITE_MULTIPLIER)
+            self.x = BATTLE_SCREEN_WIDTH/2
+            self.y = BATTLE_SCREEN_HEIGHT + (ENEMY_SPRTE_SIZE_X * ENEMY_SPRITE_MULTIPLIER)
         self.disp = True
         
     def try_spawn(self):

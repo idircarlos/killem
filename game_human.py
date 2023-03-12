@@ -15,7 +15,7 @@ from manager import EntityManager
 
 clock = pygame.time.Clock()
 pygame.display.set_caption('Example')
-screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
+screen = pygame.display.set_mode((BATTLE_SCREEN_WIDTH,BATTLE_SCREEN_HEIGHT))
 
 entity_manager = EntityManager(screen,clock)
 prev_time = time.time()

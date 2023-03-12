@@ -30,15 +30,17 @@ class Sound:
         self.sound = pygame.mixer.Sound(file_path)
         self.vol = vol
         self.sound.set_volume(vol)
+        self.is_mute = False
         
     def play(self):
         self.sound.play()
         
     def mute(self):
-        if self.sound.get_volume() != 0:
-            self.sound.set_vol(self.vol)
-        else:
+        if not self.is_mute:
             self.sound.set_volume(0)
+        else:
+            self.sound.set_volume(self.vol)
+        self.is_mute = not self.is_mute
 
 class Mixer:
     
@@ -46,6 +48,8 @@ class Mixer:
         self.bg_music = []
         self.sounds = {SHOOT_SOUND:[],ENEMY_DEATH_SOUND:[]}
         self.current_music = 0
+        self.vol = 0.15
+        self.is_mute = False
         
     def _add_bg_music(self,bg_music_files):
         for bg_music in bg_music_files: 
@@ -57,7 +61,7 @@ class Mixer:
         
     def start_loop_bg_music(self):
         pygame.mixer.music.load(self.bg_music[0])
-        pygame.mixer.music.set_volume(0.15)
+        pygame.mixer.music.set_volume(self.vol)
         pygame.mixer.music.play()
         
     def play_next_bg_music_if_needed(self):
@@ -70,6 +74,16 @@ class Mixer:
 
     def clear_queue(self):
         pygame.mixer.music.stop()
+        
+    def mute(self):
+        if not self.is_mute:
+            pygame.mixer.music.set_volume(0)
+        else:
+            pygame.mixer.music.set_volume(self.vol)
+        for list_sound in self.sounds.values():
+                for sound in list_sound:
+                    sound.mute()
+        self.is_mute = not self.is_mute
         
     def play(self,key):
         sound = random.choice(self.sounds[key])

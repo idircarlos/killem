@@ -1,4 +1,5 @@
 import pygame, time
+pygame.init()
 from util.settings import *
 from util.util import import_player_assets, import_enemy_assets, import_bullet_assets
 from manager import EntityManager
@@ -12,9 +13,9 @@ ENEMY_DEAD  = 1
 
 class Game():
     def __init__(self,agent=None):
-        pygame.init()
         self.clock = pygame.time.Clock()
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
+        self.screen = pygame.Surface((BATTLE_SCREEN_WIDTH,BATTLE_SCREEN_HEIGHT))
+        self.window = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT),pygame.SCALED)
         pygame.display.set_caption('Killem')
         self.entity_manager = None
         self.prev_time = time.time()
@@ -24,7 +25,9 @@ class Game():
         bullet_assets = import_bullet_assets()
         self.assets = {"player":player_assets,"enemy":enemy_assets,"bullet":bullet_assets}
         self.agent = agent
+        self.gamepad = self.scan_gamepad()
         self.reset()
+        
         
     def reset(self):
         if self.entity_manager is not None:
@@ -40,6 +43,7 @@ class Game():
         self.entity_manager.try_spawn()
         
     def play_step(self,action):
+        #print(self.gamepad.get_button(0))
         self.frame += 1
         # 1. collect user input
         for event in pygame.event.get():
@@ -47,7 +51,7 @@ class Game():
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
+                if event.key == pygame.K_SPACE or event.button == 0:
                     action[1] = 1
                 elif event.key == pygame.K_RIGHT or event.key == pygame.K_d:
                     action[2] = 1
@@ -56,10 +60,24 @@ class Game():
                 elif event.key == pygame.K_f:
                     action[4] = 1
                 elif event.key == pygame.K_m:
+                    GLOBAL_MIXER.mute()
+                elif event.key == pygame.K_o:
+                    pygame.display.toggle_fullscreen()
                     pass
                 elif event.key == pygame.K_s:
                     if self.agent != None:
                         self.agent.save_checkpoint(False, "./model/manual", "./model/best2")
+            if event.type == pygame.JOYBUTTONDOWN:
+                if event.button == pygame.CONTROLLER_BUTTON_A:
+                    action[1] = 1
+            if event.type == pygame.JOYHATMOTION:
+                if event.value == (1,0):
+                    action[2] = 1
+                if event.value == (-1,0):
+                    action[3] = 1
+                
+
+                
                     
         shoot_ready = self.entity_manager.player.skill_ready(SHOOT)
         
@@ -113,10 +131,13 @@ class Game():
         return reward, game_over, self.score
     
     def _update_ui(self):
+        self.window.fill((40,40,40))
         self.screen.fill((30,30,30))
         degub_tiles(self.screen)
-        debug_fps(self.screen,self.clock,self.font)
+        debug_fps(self.window,self.clock,self.font)
+        
         self.show_score()
+        
         #pygame.draw.rect(screen,(255,0,0),player.rect,1)
         #pygame.draw.rect(screen,(0,255,0),player.hitbox,1)
         # limit framerate
@@ -125,17 +146,25 @@ class Game():
         self.now_time = time.time()
         dt = self.now_time - self.prev_time
         self.prev_time = self.now_time
-        self.entity_manager.update(dt)    
+        self.entity_manager.update(dt)
+        self.window.blit(self.screen,((SCREEN_WIDTH - BATTLE_SCREEN_WIDTH)/2,(SCREEN_HEIGHT - BATTLE_SCREEN_HEIGHT)/2))
         pygame.display.flip()
         GLOBAL_MIXER.play_next_bg_music_if_needed()
         
     def show_score(self):
         score = str(self.score)
         score_f = self.font.render(score, 1, pygame.Color("WHITE"))
-        self.screen.blit(score_f,(0,0))
+        self.window.blit(score_f,(0,0))
         
     def toggle_mute(self):
         pass
+    
+    def scan_gamepad(self):
+        for i in range(pygame.joystick.get_count()):
+            joystick = pygame.joystick.Joystick(i)
+            joystick.init()
+            print("Gamepad detected! -->", joystick.get_name())
+            return joystick
     
 
         
