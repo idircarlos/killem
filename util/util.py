@@ -53,5 +53,11 @@ def import_shield_assets():
     for animation in animations.keys():
         full_path = SPRITES_PATH + animation
         animations[animation] = import_folder(full_path, (PLAYER_SPRITE_SIZE_X*2,PLAYER_SPRITE_SIZE_Y*2))
-        print(full_path)
+    return animations
+
+def import_shoot_assets():
+    animations = {'fire_01':[],'fire_02':[]}
+    for animation in animations.keys():
+        full_path = SPRITES_PATH + "shoot/" + animation
+        animations[animation] = import_folder(full_path, (BULLET_SPRITE_SIZE_X,BULLET_SPRITE_SIZE_Y))
     return animations

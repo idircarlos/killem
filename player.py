@@ -6,11 +6,13 @@ from skill import Skill
 from mixer import Sound
 
 NONE = 0
-SHOOT = 1
-FLIP_RIGHT = 2
-FLIP_LEFT = 3
-ROTATE = 4
-BLOCK = 5
+BLOCK_LEFT = 1
+BLOCK_RIGHT = 2
+FLIP_RIGHT = 3
+FLIP_LEFT = 4
+ROTATE = 5
+SHOOT = 6
+BLOCK = 7
 
 class Player(Entity):
     def __init__(self,assets):

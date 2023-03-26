@@ -19,6 +19,7 @@ class Shield(pygame.sprite.Sprite):
         hitbox = (self.rect[0]+hitbox[0],self.rect[1]+hitbox[1],self.rect[2]+hitbox[2],self.rect[3]+hitbox[3])
         self.hitbox = pygame.Rect(hitbox)
         self.timer = 0
+        self.blocked = False
         
     def update(self,dt):
         self.current_sprite += 20*dt

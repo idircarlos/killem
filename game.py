@@ -10,6 +10,7 @@ from mixer import GLOBAL_MIXER
 
 PLAYER_DEAD = 0
 ENEMY_DEAD  = 1
+SHOOT_BLOCKED = 2
 
 class Game():
     def __init__(self,agent=None):
@@ -24,7 +25,8 @@ class Game():
         enemy_assets  = import_enemy_assets()
         bullet_assets = import_bullet_assets()
         shield_assets = import_shield_assets()
-        self.assets = {"player":player_assets,"enemy":enemy_assets,"bullet":bullet_assets,"block":shield_assets}
+        shoot_assets  = import_shoot_assets()
+        self.assets = {"player":player_assets,"enemy":enemy_assets,"bullet":bullet_assets,"block":shield_assets,"shoot":shoot_assets}
         self.agent = agent
         self.gamepad = self.scan_gamepad()
         self.reset()
@@ -84,7 +86,7 @@ class Game():
 
                 
                     
-        shoot_ready = self.entity_manager.player.skill_ready(SHOOT)
+        block_ready = self.entity_manager.player.skill_ready(BLOCK)
         
         # 2. action
         self.entity_manager.player_action(action)
@@ -101,33 +103,37 @@ class Game():
         # 4. create a new enemy
         if self.frame % 1 == 0:
             self.spawn_enemy()
+            
+        shield = None
+        for shield_i in self.entity_manager.shield_group:
+            shield = shield_i
         
         # 5. check if the player has killed an enemy
-        if collision == ENEMY_DEAD:
+        if collision == SHOOT_BLOCKED:
             self.score += 1
-            if danger_zone == DANGER_ZONE_LEFT_0 or danger_zone == DANGER_ZONE_RIGHT_0:
-                reward = 10
-            elif danger_zone == DANGER_ZONE_LEFT_1 or danger_zone == DANGER_ZONE_RIGHT_1:
-                reward = 11
-            elif danger_zone == DANGER_ZONE_LEFT_2 or danger_zone == DANGER_ZONE_RIGHT_2:
-                reward = 12
-            elif danger_zone == DANGER_ZONE_LEFT_3 or danger_zone == DANGER_ZONE_RIGHT_3:
-                reward = 14
-            elif danger_zone == DANGER_ZONE_LEFT_4 or danger_zone == DANGER_ZONE_RIGHT_4:
-                reward = 20
+            reward = 200
+            #print("xd")
+            shield.blocked = True
                 
         # 6. check if the player shots without enemy
         selected = max(action)
         action_index = action.index(selected)
-        if action_index == SHOOT:
-            if not shoot_ready:
+        
+        if action_index == BLOCK:
+            if not block_ready and shield != None and shield.blocked == False:
                 reward = -1
             else:
-                left,right = self.entity_manager.get_enemies_positions()
-                if (self.entity_manager.player.orientation == LEFT and left == False and right == True) or (self.entity_manager.player.orientation == RIGHT and right == False and left == True):
-                    reward = -20
-                else:
-                    reward += 10
+                if shield != None and collision != SHOOT_BLOCKED:
+                    shoot_danger_left,shoot_danger_right = self.entity_manager.get_shoots_danger()
+                    if shoot_danger_left[DANGER_SHOOT_LEFT] == False and shoot_danger_right[DANGER_SHOOT_RIGHT] == False and shield.blocked == False:
+                        reward = -90
+                    elif shoot_danger_right[DANGER_SHOOT_RIGHT] == True and shield.orientation == LEFT and shield.blocked == False:
+                        reward = -90
+                    elif shoot_danger_left[DANGER_SHOOT_LEFT] == True and shield.orientation == RIGHT and shield.blocked == False:
+                        reward = -90
+                    else:
+                        reward = 0
+                    
         # 8. update ui and clock
         self._update_ui()
         self.clock.tick(FPS)
