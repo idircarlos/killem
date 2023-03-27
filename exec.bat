@@ -8,12 +8,12 @@ if "%arg1%" == "-a" (
 	if "%CONDA_DEFAULT_ENV%" == "%CONDA_DEFAULT_ENV%" ( 
 		activate pygame_env
 	)
-	python agent1.py
+	python agent.py
 )
 
 if "%arg1%" == "--agent" (
 	if "%CONDA_DEFAULT_ENV%" == "%CONDA_DEFAULT_ENV%" ( 
 		activate pygame_env
 	)
-	python agent1.py
+	python agent.py
 )
