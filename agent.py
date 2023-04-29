@@ -135,11 +135,14 @@ class Agent:
             shutil.copyfile(f_path, best_fpath)
             
     
-    def load_checkpoint(self,checkpoint_fpath, model, optimizer):
+    def load_checkpoint(self,checkpoint_fpath, model: Linear_QNet, optimizer):
         checkpoint = torch.load(checkpoint_fpath)
         model.load_state_dict(checkpoint['state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer'])
-        model.train() # TODO: May change this
+        if TRAINING:
+            model.train() # TODO: May change this
+        else:
+            model.eval()
         return checkpoint['epoch'], checkpoint['record'], checkpoint['total_score']
 
 
@@ -149,8 +152,9 @@ def train():
     total_score = 0
     agent = Agent()
     game = Game(agent)
-    print("Training started!\n")
-    #agent.n_games, agent.record, agent.total_score = agent.load_checkpoint("./model/best/best_model.pth",agent.model,agent.trainer.optimizer)
+    if TRAINING:
+        print("Training started!\n")
+    agent.n_games, agent.record, agent.total_score = agent.load_checkpoint("./model/best/best_model.pth",agent.model,agent.trainer.optimizer)
     while True:
         # get old state
         state_old = agent.get_state(game)
@@ -166,30 +170,33 @@ def train():
             #print(reward)
             pass
 
-        # train short memory
-        agent.train_short_memory(state_old, final_move, reward, state_new, done)
+        if TRAINING:
+            # train short memory
+            agent.train_short_memory(state_old, final_move, reward, state_new, done)
 
-        # remember
-        agent.remember(state_old, final_move, reward, state_new, done)
+
+            # remember
+            agent.remember(state_old, final_move, reward, state_new, done)
 
         if done:
             # train long memory, plot result
             game.reset()
-            agent.n_games += 1
-            agent.train_long_memory()
+            if TRAINING:
+                agent.n_games += 1
+                agent.train_long_memory()
 
-            if score > agent.record:
-                agent.record = score
-                agent.save_checkpoint(True, "./model", "./model/best")
+                if score > agent.record:
+                    agent.record = score
+                    agent.save_checkpoint(True, "./model", "./model/best")
 
-            print('Game', agent.n_games, 'Score', score, 'Record:', agent.record)
-            print()
+                print('Game', agent.n_games, 'Score', score, 'Record:', agent.record)
+                print()
 
-            plot_scores.append(score)
-            total_score += score
-            mean_score = total_score / agent.n_games
-            plot_mean_scores.append(mean_score)
-            plot(plot_scores, plot_mean_scores)
+                plot_scores.append(score)
+                total_score += score
+                mean_score = total_score / agent.n_games
+                plot_mean_scores.append(mean_score)
+                plot(plot_scores, plot_mean_scores)
 
 if __name__ == '__main__':
     train()
