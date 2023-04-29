@@ -163,7 +163,7 @@ def train():
         state_new = agent.get_state(game)
         
         if reward != 0 and reward != -1:
-            print(reward)
+            #print(reward)
             pass
 
         # train short memory
