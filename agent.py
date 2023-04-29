@@ -13,16 +13,35 @@ MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
 LR = 0.001
 
-UP = "\x1B[1A" # Moves up 21 times for \r
+UP = "\x1B[1A" # Moves up 1 times for \r
 CLR = "\x1B[0K" # Clears
 
 def print_state(state_array):
     
-    print(f"{UP}{TerminalColor.OKBLUE}{state_array[0]}{TerminalColor.ENDC} ",end="")
-    print(f"{TerminalColor.OKBLUE}{state_array[1]}{TerminalColor.ENDC} ",end="  ")
-    print(f"{TerminalColor.HEADER}{state_array[2]}{TerminalColor.ENDC} ",end="")
-    print(f"{TerminalColor.HEADER}{state_array[3]}{TerminalColor.ENDC} ",end="  ")
-    print(f"{TerminalColor.BOLD}{state_array[4]}{TerminalColor.ENDC} ",end="")
+    print(f"{UP}{TerminalColor.BOLD}{state_array[0]}{TerminalColor.ENDC} ",end="")
+    print(f"{TerminalColor.BOLD}{state_array[1]}{TerminalColor.ENDC} ",end="  ")
+    
+    print(f"{TerminalColor.OKCYAN}{state_array[2]}{TerminalColor.ENDC} ",end="")
+    print(f"{TerminalColor.OKCYAN}{state_array[3]}{TerminalColor.ENDC} ",end="  ")
+    
+    print(f"{TerminalColor.HEADER}{state_array[4]}{TerminalColor.ENDC} ",end="")
+    print(f"{TerminalColor.HEADER}{state_array[5]}{TerminalColor.ENDC} ",end="  ")
+
+    print(f"{TerminalColor.ENDC}{state_array[6]}{TerminalColor.ENDC} ",end="")
+    print(f"{TerminalColor.OKCYAN}{state_array[7]}{TerminalColor.ENDC} ",end="")
+    print(f"{TerminalColor.OKGREEN}{state_array[8]}{TerminalColor.ENDC} ",end="")
+    print(f"{TerminalColor.WARNING}{state_array[9]}{TerminalColor.ENDC} ",end="")
+    print(f"{TerminalColor.FAIL}{state_array[10]}{TerminalColor.ENDC} ",end=" ")
+    
+    print(f"{TerminalColor.FAIL}{state_array[11]}{TerminalColor.ENDC} ",end="")
+    print(f"{TerminalColor.WARNING}{state_array[12]}{TerminalColor.ENDC} ",end="")
+    print(f"{TerminalColor.OKGREEN}{state_array[13]}{TerminalColor.ENDC} ",end="")
+    print(f"{TerminalColor.OKCYAN}{state_array[14]}{TerminalColor.ENDC} ",end="")
+    print(f"{TerminalColor.ENDC}{state_array[15]}{TerminalColor.ENDC} ",end="  ")
+    
+    print(f"{TerminalColor.HEADER}{state_array[16]}{TerminalColor.ENDC} ",end="")
+    print(f"{TerminalColor.HEADER}{state_array[17]}{TerminalColor.ENDC} ",end="")
+
     print(CLR)
 
 class Agent:
@@ -32,19 +51,32 @@ class Agent:
         self.epsilon = 0 # randomness
         self.gamma = 0.9 # discount rate
         self.memory = deque(maxlen=MAX_MEMORY) # popleft()
-        self.model = Linear_QNet(5, 256, 3)
+        self.model = Linear_QNet(18, 512, 5)
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
         self.record = 0
         self.total_score = 0
 
 
     def get_state(self, game: Game):
+        
+        # shoot
+        bullet_left, bullet_right = game.entity_manager.get_bullets_positions()
+        enemy_left_danger, enemy_right_danger = game.entity_manager.get_enemies_danger()
+        
+        # shield
         player_blocking_left, player_blocking_right = game.entity_manager.is_player_blocking()
         shoot_left_danger, shoot_right_danger = game.entity_manager.get_shoots_danger()
+        
+        # cooldowns
         cds = game.entity_manager.player.get_cooldowns()
-        state = [player_blocking_left, player_blocking_right,
+        
+        # state
+        state = [bullet_left, bullet_right, 
+                 player_blocking_left, player_blocking_right,
                  shoot_left_danger[DANGER_SHOOT_LEFT],shoot_right_danger[DANGER_SHOOT_RIGHT],
-                 cds[2]]
+                 enemy_left_danger[DANGER_ZONE_LEFT_0],enemy_left_danger[DANGER_ZONE_LEFT_1],enemy_left_danger[DANGER_ZONE_LEFT_2],enemy_left_danger[DANGER_ZONE_LEFT_3],enemy_left_danger[DANGER_ZONE_LEFT_4],
+                 enemy_right_danger[DANGER_ZONE_RIGHT_4],enemy_right_danger[DANGER_ZONE_RIGHT_3],enemy_right_danger[DANGER_ZONE_RIGHT_2],enemy_right_danger[DANGER_ZONE_RIGHT_1],enemy_right_danger[DANGER_ZONE_RIGHT_0],
+                 cds[1],cds[2]]
         
         #print(np.array(state, dtype=int))
         #print(f"{UP}{np.array(state, dtype=int)}{CLR}")
@@ -71,10 +103,10 @@ class Agent:
 
     def get_action(self, state):
         # random moves: tradeoff exploration / exploitation
-        self.epsilon = 80 - self.n_games
-        final_move = [0,0,0]
+        self.epsilon = 150 - self.n_games
+        final_move = [0,0,0,0,0]
         if random.randint(0, 200) < self.epsilon:
-            move = random.randint(0, 2)
+            move = random.randint(0, 4)
             final_move[move] = 1
             #print("random",move)
         else:
@@ -118,7 +150,7 @@ def train():
     agent = Agent()
     game = Game(agent)
     print("Training started!\n")
-    agent.n_games, agent.record, agent.total_score = agent.load_checkpoint("./model/best/best_model.pth",agent.model,agent.trainer.optimizer)
+    #agent.n_games, agent.record, agent.total_score = agent.load_checkpoint("./model/best/best_model.pth",agent.model,agent.trainer.optimizer)
     while True:
         # get old state
         state_old = agent.get_state(game)
@@ -131,7 +163,7 @@ def train():
         state_new = agent.get_state(game)
         
         if reward != 0 and reward != -1:
-            #print(reward)
+            print(reward)
             pass
 
         # train short memory

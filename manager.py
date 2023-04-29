@@ -45,9 +45,17 @@ class EntityManager:
             if self.player.skill_ready(SHOOT):
                 self.player.use_skill(SHOOT)
                 self.player_attack()
-        elif action == FLIP_LEFT:
-            self.player_flip(LEFT)
-        elif action == FLIP_RIGHT:
+        elif action == SHOOT_LEFT:
+            if self.player.skill_ready(SHOOT):
+                self.player_flip(LEFT)
+                self.player.use_skill(SHOOT)
+                self.player_attack()
+        elif action == SHOOT_RIGHT:
+            if self.player.skill_ready(SHOOT):
+                self.player_flip(RIGHT)
+                self.player.use_skill(SHOOT)
+                self.player_attack()
+        elif action == SHOOT_RIGHT:
             self.player_flip(RIGHT)
         elif action == ROTATE:
             if self.player.skill_ready(ROTATE):
@@ -55,10 +63,12 @@ class EntityManager:
                 self.flip_axis()
         elif action == BLOCK_LEFT:
             if self.player.skill_ready(BLOCK):
+                self.player_flip(LEFT)
                 self.player.use_skill(BLOCK)
                 self.player_block(LEFT)
         elif action == BLOCK_RIGHT:
             if self.player.skill_ready(BLOCK):
+                self.player_flip(RIGHT)
                 self.player.use_skill(BLOCK)
                 self.player_block(RIGHT)
         

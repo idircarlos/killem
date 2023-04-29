@@ -85,7 +85,7 @@ class Game():
                 
 
                 
-                    
+        shoot_ready = self.entity_manager.player.skill_ready(SHOOT)
         block_ready = self.entity_manager.player.skill_ready(BLOCK)
         
         # 2. action
@@ -97,7 +97,7 @@ class Game():
         collision, danger_zone = self.entity_manager.check_collisions() 
         if collision == PLAYER_DEAD:
             game_over = True
-            reward = -100
+            reward = -500
             return reward, game_over, self.score
 
         # 4. create a new enemy
@@ -108,29 +108,52 @@ class Game():
         for shield_i in self.entity_manager.shield_group:
             shield = shield_i
         
-        # 5. check if the player has killed an enemy
+        # 5a. check if the player has killed an enemy
+        if collision == ENEMY_DEAD:
+            self.score += 1
+            if danger_zone == DANGER_ZONE_LEFT_0 or danger_zone == DANGER_ZONE_RIGHT_0:
+                reward = 15
+            elif danger_zone == DANGER_ZONE_LEFT_1 or danger_zone == DANGER_ZONE_RIGHT_1:
+                reward = 20
+            elif danger_zone == DANGER_ZONE_LEFT_2 or danger_zone == DANGER_ZONE_RIGHT_2:
+                reward = 25
+            elif danger_zone == DANGER_ZONE_LEFT_3 or danger_zone == DANGER_ZONE_RIGHT_3:
+                reward = 30
+            elif danger_zone == DANGER_ZONE_LEFT_4 or danger_zone == DANGER_ZONE_RIGHT_4:
+                reward = 40
+        
+        # 5b. check if the player has blocked a shoot
         if collision == SHOOT_BLOCKED:
             self.score += 1
-            reward = 200
-            #print("xd")
+            reward = 40
             shield.blocked = True
                 
-        # 6. check if the player shots without enemy
+        # 6a. check if the player shots without enemy
         selected = max(action)
         action_index = action.index(selected)
+        if action_index == SHOOT_LEFT or action_index == SHOOT_RIGHT:
+            if not shoot_ready:
+                reward = -1
+            else:
+                left,right = self.entity_manager.get_enemies_positions()
+                if (self.entity_manager.player.orientation == LEFT and left == False and right == True) or (self.entity_manager.player.orientation == RIGHT and right == False and left == True):
+                    reward = -20
+                else:
+                    reward += 10
         
-        if action_index == BLOCK:
+        # 6b. check if the player blocks without enemy shoots
+        if action_index == BLOCK_LEFT or action_index == BLOCK_RIGHT:
             if not block_ready and shield != None and shield.blocked == False:
                 reward = -1
             else:
                 if shield != None and collision != SHOOT_BLOCKED:
                     shoot_danger_left,shoot_danger_right = self.entity_manager.get_shoots_danger()
                     if shoot_danger_left[DANGER_SHOOT_LEFT] == False and shoot_danger_right[DANGER_SHOOT_RIGHT] == False and shield.blocked == False:
-                        reward = -90
+                        reward = -50
                     elif shoot_danger_right[DANGER_SHOOT_RIGHT] == True and shield.orientation == LEFT and shield.blocked == False:
-                        reward = -90
+                        reward = -50
                     elif shoot_danger_left[DANGER_SHOOT_LEFT] == True and shield.orientation == RIGHT and shield.blocked == False:
-                        reward = -90
+                        reward = -50
                     else:
                         reward = 0
                     
