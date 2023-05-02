@@ -61,3 +61,12 @@ def import_shoot_assets():
         full_path = SPRITES_PATH + "shoot/" + animation
         animations[animation] = import_folder(full_path, (BULLET_SPRITE_SIZE_X,BULLET_SPRITE_SIZE_Y))
     return animations
+
+def import_background_assets():
+    animations = {'bg_01':[]}
+    for animation in animations.keys():
+        full_path = BACKGROUND_PATH + animation
+        print(full_path)
+        animations[animation] = import_folder(full_path, (1218,768))
+        print(animations)
+    return animations

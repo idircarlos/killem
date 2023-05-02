@@ -15,8 +15,9 @@ SHOOT_BLOCKED = 2
 class Game():
     def __init__(self,agent=None):
         self.clock = pygame.time.Clock()
-        self.screen = pygame.Surface((BATTLE_SCREEN_WIDTH,BATTLE_SCREEN_HEIGHT))
         self.window = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT),pygame.SCALED)
+        self.screen = pygame.Surface((BATTLE_SCREEN_WIDTH,BATTLE_SCREEN_HEIGHT),pygame.SRCALPHA,32) # SRCALPHA, 32 transparent background surface
+        self.screen = self.screen.convert_alpha()
         pygame.display.set_caption('Killem')
         self.entity_manager = None
         self.prev_time = time.time()
@@ -29,6 +30,12 @@ class Game():
         self.assets = {"player":player_assets,"enemy":enemy_assets,"bullet":bullet_assets,"block":shield_assets,"shoot":shoot_assets}
         self.agent = agent
         self.gamepad = self.scan_gamepad()
+        
+        self.background_assets = import_background_assets()
+        self.current_bg = 0
+        self.n_sprites_bg = len(self.background_assets[CURRENT_BACKGROUND])
+        self.background = self.background_assets[CURRENT_BACKGROUND][self.current_bg]
+        
         self.reset()
         
         
@@ -73,17 +80,15 @@ class Game():
                     if self.agent != None:
                         self.agent.save_checkpoint(False, "./model/manual", "./model/best2")
             if event.type == pygame.JOYBUTTONDOWN:
-                if event.button == pygame.CONTROLLER_BUTTON_A:
-                    action[1] = 1
-                if event.button == pygame.CONTROLLER_BUTTON_X:
-                    action[5] = 1
+                if event.button == pygame.CONTROLLER_AXIS_TRIGGERLEFT:
+                    action[4] = 1
+                if event.button == pygame.CONTROLLER_AXIS_TRIGGERRIGHT:
+                    action[3] = 1
             if event.type == pygame.JOYHATMOTION:
                 if event.value == (1,0):
                     action[2] = 1
                 if event.value == (-1,0):
-                    action[3] = 1
-                
-
+                    action[1] = 1
                 
         shoot_ready = self.entity_manager.player.skill_ready(SHOOT)
         block_ready = self.entity_manager.player.skill_ready(BLOCK)
@@ -166,8 +171,10 @@ class Game():
     
     def _update_ui(self):
         self.window.fill((40,40,40))
-        self.screen.fill((30,30,30))
-        degub_tiles(self.screen)
+        self.window.blit(self.background,(0,0))
+        self.screen.fill((255,255,255,0))   #clear the transparent background surface
+
+        #degub_tiles(self.screen)
         debug_fps(self.window,self.clock,self.font)
         
         self.show_score()
@@ -181,7 +188,9 @@ class Game():
         dt = self.now_time - self.prev_time
         self.prev_time = self.now_time
         self.entity_manager.update(dt)
-        self.window.blit(self.screen,((SCREEN_WIDTH - BATTLE_SCREEN_WIDTH)/2,(SCREEN_HEIGHT - BATTLE_SCREEN_HEIGHT)/2))
+        self.window.blit(self.screen,(0,80))
+        self.background = self.background_assets[CURRENT_BACKGROUND][int(self.current_bg)%self.n_sprites_bg]
+        self.current_bg += 15*dt
         pygame.display.flip()
         GLOBAL_MIXER.play_next_bg_music_if_needed()
         

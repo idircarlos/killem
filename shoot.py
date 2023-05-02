@@ -26,7 +26,7 @@ class Shoot(pygame.sprite.Sprite):
     def move(self):
         x = self.rect.centerx
         y = self.rect.centery
-        self.angle = math.atan2(BATTLE_SCREEN_WIDTH/2 - y, BATTLE_SCREEN_HEIGHT/2 - x)
+        self.angle = math.atan2(BATTLE_SCREEN_HEIGHT/2 - y, BATTLE_SCREEN_WIDTH/2 - x)
         self.dx = math.cos(self.angle)
         self.dy = math.sin(self.angle)
     

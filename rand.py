@@ -20,3 +20,6 @@ class Rand:
         num1 = rd.uniform(ranges[0][0],ranges[0][1])
         num2 = rd.uniform(ranges[1][0],ranges[1][1])
         return rd.choice([num1, num2])
+    
+    def random_range(self,range):
+        return rd.uniform(range[0],range[1])

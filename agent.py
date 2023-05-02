@@ -139,7 +139,7 @@ class Agent:
         checkpoint = torch.load(checkpoint_fpath)
         model.load_state_dict(checkpoint['state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer'])
-        if TRAINING:
+        if LEARNING:
             model.train() # TODO: May change this
         else:
             model.eval()
@@ -152,7 +152,7 @@ def train():
     total_score = 0
     agent = Agent()
     game = Game(agent)
-    if TRAINING:
+    if LEARNING:
         print("Training started!\n")
     agent.n_games, agent.record, agent.total_score = agent.load_checkpoint("./model/best/best_model.pth",agent.model,agent.trainer.optimizer)
     while True:
@@ -170,7 +170,7 @@ def train():
             #print(reward)
             pass
 
-        if TRAINING:
+        if LEARNING:
             # train short memory
             agent.train_short_memory(state_old, final_move, reward, state_new, done)
 
@@ -181,7 +181,7 @@ def train():
         if done:
             # train long memory, plot result
             game.reset()
-            if TRAINING:
+            if LEARNING:
                 agent.n_games += 1
                 agent.train_long_memory()
 

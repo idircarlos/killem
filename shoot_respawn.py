@@ -31,7 +31,7 @@ class ShootRespawn:
     def generate_shoot_pos(self):
         
         x = self.rand.choice(self.list_x)
-        y = self.rand.random_of_ranges([(0,int(BATTLE_SCREEN_HEIGHT/2) - 300),(int(BATTLE_SCREEN_HEIGHT/2 + 300),BATTLE_SCREEN_HEIGHT)])
+        y = self.rand.random_range((0,int(BATTLE_SCREEN_HEIGHT/4)))
         return {"coords":(x,y),"orientation":self.list_x.index(x)} # if the choice is the first item, then index is 0 -> orientation is RIGHT because the position is LEFT
                 
     def _rand_spawn(self):
