@@ -1,6 +1,5 @@
-from game import Game
+from game.game import Game
 
 game = Game()
 
-while True:
-    game.play_step([0,0,0,0,0,0])
+game.start()
