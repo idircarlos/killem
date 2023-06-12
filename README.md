@@ -4,6 +4,40 @@
 
 Killem es un videojuego retro de jugabilidad sencilla y adictiva que pone a prueba tus reflejos. El objetivo consiste en aguantar el mayor tiempo posible sin morir frente a los enemigos que se aproximan ni de los disparos enemigos. Para ello, debes defenderte con tus disparos y tu escudo.
 
+## Uso
+
+Para probar el programa, es necesario crear un entorno virtual con [Anaconda](https://www.anaconda.com/), aunque también puede ser creado con la propia utilidad que proporciona Python. En este tutorial se realiza con Anaconda, pero los pasos a seguir son los mismos.
+
+Para la creación del entorno virtual ejecutar este comando:
+
+```
+conda create -n killem_env python=3.7
+```
+
+Antes de activar el entorno, es posible que sea necesario inicializar el shell:
+
+```
+conda init
+```
+
+Cierra la terminal y vuelve a abrirla para cargar la nueva configuración. Ahora, activa el entorno creado con el siguiente comando:
+
+```
+conda activate killem_env
+```
+
+A continuación, se instalaran los módulos necesarios:
+
+```
+pip install -r requirements.txt
+```
+
+Para ejecutar el programa, ejecutar el siguiente comando:
+
+```
+python main.py
+```
+
 ## Controles
 
 ### Teclado
@@ -12,9 +46,10 @@ Killem es un videojuego retro de jugabilidad sencilla y adictiva que pone a prue
 * → : Disparo a la derecha
 * **A**  : Escudo a la izquierda
 * **D**  : Escudo a la derecha
-* **ESC** : Pausar/Retomar
-* **O** : Pantalla completa/Ventana
+* **ESC** : Pausar/Retoma
 * **M** : Silenciar/Desilenciar
+* **F3** : Mostrar/Ocultar FPS
+* **F4** : Pantalla completa/Ventana
 
 ### Gamepad (XBOX)
 

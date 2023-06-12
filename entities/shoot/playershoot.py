@@ -12,7 +12,6 @@ class PlayerShoot(Shoot):
     def update(self,dt):
         if self.rect[0] <= 0 - self.rect[2] or self.rect[0] >= BATTLE_SCREEN_WIDTH:
             self.kill()
-            #print(str(round(self.timer,5)))
         self.rect.x += self.dir*round(BULLET_VELOCITY*dt*TARGET_FPS)
         self.current_sprite += 20*dt
         if self.current_sprite >= len(self.animations[self.current_animation]):

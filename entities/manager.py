@@ -88,12 +88,12 @@ class EntityManager:
     def try_spawn(self):
         enemy_assets = self.assets["enemy_skeleton"]
         if self.left_respawn.try_spawn():
-            is_special_enemy = self.rand.decision(0.03)
+            is_special_enemy = self.rand.decision(0.01)
             if is_special_enemy:
                 enemy_assets = self.assets["enemy_undead"]
             self.enemy_group.add(Enemy((self.left_respawn.x,self.left_respawn.y),(0,0,0,0),enemy_assets,LEFT))
         if self.right_respawn.try_spawn():
-            is_special_enemy = self.rand.decision(0.03)
+            is_special_enemy = self.rand.decision(0.01)
             if is_special_enemy:
                 enemy_assets = self.assets["enemy_undead"]
             self.enemy_group.add(Enemy((self.right_respawn.x,self.right_respawn.y),(0,0,0,0),enemy_assets,RIGHT))
@@ -160,7 +160,6 @@ class EntityManager:
                     danger_zone_right = 3
                 if self.enemy_in_danger_zone(enemy,DANGER_ZONE_RIGHT_4) and danger_zone_right < 4:
                     danger_zone_right = 4
-                #print(str(round(bullet.timer,5)))
         return danger_zone_left, danger_zone_right                
             
     def check_collisions(self):
@@ -181,11 +180,8 @@ class EntityManager:
                             danger_zone = DANGER_ZONE_RIGHT_4
                         enemy.alive = False
                         GLOBAL_MIXER.play(ENEMY_DEATH_SOUND)
-                        #enemy.kill()
-                        #self.enemy_group.remove(enemy)
                         enemy.animate("dead")
                         bullet.kill()
-                        #print(str(round(bullet.timer,5)))
                         return ENEMY_DEAD, danger_zone
                 else:
                     if pygame.Rect.colliderect(bullet.rect,enemy.rect) and bullet.rect.x <= enemy.rect.x + int(enemy.rect.width/2 - 25) and (enemy.spawn != TOP and enemy.spawn != BOTTOM) and enemy.alive:
@@ -202,28 +198,20 @@ class EntityManager:
                             danger_zone = DANGER_ZONE_LEFT_0
                         enemy.alive = False
                         GLOBAL_MIXER.play(ENEMY_DEATH_SOUND)
-                        #enemy.kill()
                         enemy.animate("dead")
                         bullet.kill()
-                        #print(str(round(bullet.timer,5)))
                         return ENEMY_DEAD, danger_zone
         for enemy in self.enemy_group:
-            if pygame.Rect.colliderect(self.player.hitbox,enemy.rect):
-                #self.player.kill()
-                
+            if pygame.Rect.colliderect(self.player.hitbox,enemy.rect):                
                 self.player.animate("dead")
                 return PLAYER_DEAD, -1
         for shoot in self.shoot_group:
-            if pygame.Rect.colliderect(self.player.hitbox,shoot.rect):
-                #self.player.kill()
-                #shoot.kill()
-                
+            if pygame.Rect.colliderect(self.player.hitbox,shoot.rect):   
                 # hide shoot sprite, but detect collide to reproduce dead to player
                 temp_image = pygame.Surface((24, 24), flags=pygame.SRCALPHA)
                 temp_image.fill((0, 0, 0, 0)) #RGBA sequence
                 shoot.image = temp_image
                 self.player.animate("dead")
-                #print("TOCADO")
                 return PLAYER_DEAD, -1
             for shield in self.shield_group:
                 if pygame.Rect.colliderect(shield.hitbox,shoot.rect):
@@ -328,7 +316,6 @@ class EntityManager:
                     danger_left[DANGER_ZONE_LEFT_1] = True
                 elif self.player_shoot_danger_zone(bullet,DANGER_ZONE_LEFT_0):
                     danger_left[DANGER_ZONE_LEFT_0] = True
-                #print("RIGHT",bullet.rect.x,danger_left,danger_right)
         return danger_left, danger_right
     
     
@@ -359,7 +346,6 @@ class EntityManager:
     def is_player_blocking(self):
         if len(self.shield_group) >= 1:
             for shield in self.shield_group:
-                #print(shield.orientation)
                 return shield.orientation == LEFT, shield.orientation == RIGHT 
         return False, False
     def update(self,dt,zone=GAME):
@@ -367,8 +353,6 @@ class EntityManager:
             self.player_group.draw(self.screen)
             self.player_group.update(dt)
             return
-        if TRAINING:
-            dt = 1
         self.check_collisions()
         self.player_group.draw(self.screen)
 
@@ -388,8 +372,9 @@ class EntityManager:
             self.shield_group.update(dt)
             self.shoot_group.update(dt)
             self.try_spawn()
+            
         if DEBUG_MODE:
-            #pygame.draw.rect(self.screen,(0,255,0),self.player.rect,1)
+            pygame.draw.rect(self.screen,(0,0,255),self.player.hitbox,1)
             pygame.draw.line(self.screen,(255,255,255),(DANGER_ZONE_LEFT_0,0),(DANGER_ZONE_LEFT_0,BATTLE_SCREEN_HEIGHT),1)
             pygame.draw.line(self.screen,(255,255,255),(DANGER_ZONE_RIGHT_0-1,0),(DANGER_ZONE_RIGHT_0-1,BATTLE_SCREEN_HEIGHT),1)
             pygame.draw.line(self.screen,(0,255,255),(DANGER_ZONE_RIGHT_1,0),(DANGER_ZONE_RIGHT_1,BATTLE_SCREEN_HEIGHT),1)
@@ -405,24 +390,15 @@ class EntityManager:
             pygame.draw.line(self.screen,(255,0,255),(DANGER_SHOOT_LEFT,0),(DANGER_SHOOT_LEFT,BATTLE_SCREEN_HEIGHT),1)
             pygame.draw.line(self.screen,(255,0,255),(DANGER_SHOOT_RIGHT,0),(DANGER_SHOOT_RIGHT,BATTLE_SCREEN_HEIGHT),1)
             for enemy in self.enemy_group:
-                #pygame.draw.rect(self.screen,(255,0,0),enemy.rect,1)
-                #pygame.draw.circle(self.screen,(0,0,255),(enemy.rect.x,enemy.rect.y),10,20)
-                #pygame.draw.line(self.screen,(0,255,255),(CENTER_X,CENTER_Y),(SCREEN_WIDTH,SCREEN_HEIGHT))
-                #pygame.draw.line(self.screen,(0,255,255),(CENTER_X,CENTER_Y),(SCREEN_WIDTH/2,SCREEN_HEIGHT))
-                #pygame.draw.line(self.screen,(0,255,255),(CENTER_X,CENTER_Y),(SCREEN_WIDTH,SCREEN_HEIGHT/2))
-                pass
-            #pygame.draw.circle(self.screen,(0,0,255),(CENTER_X,CENTER_Y),10,20)
+                pygame.draw.rect(self.screen,(255,0,0),enemy.rect,1)
             for shield in self.shield_group:
-                #pygame.draw.rect(self.screen,(0,255,255),shield.hitbox,1)
-                pass
-                
+                pygame.draw.rect(self.screen,(0,255,255),shield.hitbox,1)
+            for bullet in self.bullet_group:
+                pygame.draw.rect(self.screen,(82, 198, 227),bullet.rect,1)
             for shoot in self.shoot_group:
-                pygame.draw.rect(self.screen,(255,255,0),shoot.rect,1)
-                record_text = self.font.render("dy: " +str(round(shoot.dy*dt*TARGET_FPS)), False, (255,255,255))
-                self.screen.blit(record_text, shoot.rect)
-                pass
-        
-        #pygame.draw.circle(self.screen,(255,0,255),(BATTLE_SCREEN_WIDTH/2,BATTLE_SCREEN_HEIGHT/2),10,100)
+                pygame.draw.rect(self.screen,(255,128,0),shoot.rect,1)
+
+            pygame.draw.circle(self.screen,(255,0,255),(BATTLE_SCREEN_WIDTH/2,BATTLE_SCREEN_HEIGHT/2),5,50)
         
     def free(self):
         for sprite in self.player_group:
@@ -431,4 +407,3 @@ class EntityManager:
             sprite.kill()
         for sprite in self.bullet_group:
             sprite.kill()
-            print(str(round(sprite.timer,5)))

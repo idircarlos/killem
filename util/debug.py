@@ -8,11 +8,11 @@ def degub_tiles(screen):
         pygame.draw.line(surface,(255,255,255,32), (x, 0), (x, BATTLE_SCREEN_HEIGHT))
     for y in range(0,BATTLE_SCREEN_HEIGHT,TILE_SIZE):
         pygame.draw.line(surface,(255,255,255,32), (0, y), (BATTLE_SCREEN_WIDTH, y))
-    #pygame.draw.rect(screen,(255,0,0),self.rect,1)
-    #pygame.draw.rect(screen,(0,255,0),self.hitbox,1)
     screen.blit(surface,(0,0))
 
-def debug_fps(screen,clock,font):
+def debug_fps(screen,clock,font,show_fps):
+    if not show_fps:
+        return
     fps = str(int(clock.get_fps()))
     fps_f = font.render(fps , 1, pygame.Color("WHITE"))
     screen.blit(fps_f,(SCREEN_WIDTH-30,0))

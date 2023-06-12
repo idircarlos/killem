@@ -21,10 +21,8 @@ class Shoot(Entity):
     def update(self,dt):
         if self.orientation == RIGHT and self.rect.x + self.rect.width > BATTLE_SCREEN_WIDTH/2:
             self.kill()
-            print("321")
         elif self.orientation == LEFT and self.rect.x < BATTLE_SCREEN_HEIGHT/2:
             self.kill()
-            print("123")
         self.move()
         self.rect.x += round(self.dx*BULLET_VELOCITY*dt*TARGET_FPS)
         self.rect.y += round(self.dy*BULLET_VELOCITY*dt*TARGET_FPS)

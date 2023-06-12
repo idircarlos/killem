@@ -7,9 +7,8 @@ from entities.manager import EntityManager
 import sys
 from util.debug import *
 from entities.characters.player import *
-from mixer.mixer import GLOBAL_MIXER, OPTION_CHANGE, OPTION_SELECTED, PAUSE_PRESSED, UNPAUSE_PRESSED, BACK_PRESSED, GAME_OVER_SOUND
+from mixer.mixer import GLOBAL_MIXER, OPTION_SELECTED, PAUSE_PRESSED, UNPAUSE_PRESSED, BACK_PRESSED, GAME_OVER_SOUND
 import random as rand
-from util.helper import plot
 
 PLAYER_DEAD = 0
 ENEMY_DEAD  = 1
@@ -21,10 +20,12 @@ class Game():
         self.clock = pygame.time.Clock()
         pygame.display.set_icon(pygame.image.load('./resources/icons/skull.png'))
         pygame.display.set_caption('Killem')
-        self.window = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT),pygame.SCALED)
+        
+        self.window = pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT), pygame.SCALED)
+        pygame.display.toggle_fullscreen()
         self.screen = pygame.Surface((BATTLE_SCREEN_WIDTH,BATTLE_SCREEN_HEIGHT),pygame.SRCALPHA,32) # SRCALPHA, 32 transparent background surface
         self.screen = self.screen.convert_alpha()
-        pygame.display.toggle_fullscreen()
+        
         
         self.entity_manager = None
         self.prev_time = time.time()
@@ -39,7 +40,8 @@ class Game():
         shoot_assets  = import_shoot_assets()
         self.assets = {"player":player_assets,"enemy_skeleton":enemy_skeleton_assets,"enemy_undead":enemy_nightborne_assets,"bullet":bullet_assets,"block":shield_assets,"shoot":shoot_assets}
         self.agent = agent
-        self.gamepad = self.scan_gamepad()
+        self.gamepad = None
+        self.scan_gamepad()
         pygame.mouse.set_cursor(pygame.cursors.broken_x)
         self.background_assets = import_background_assets()
         self.bg = rand.choice(list(self.background_assets))
@@ -50,6 +52,7 @@ class Game():
         self.paused = [False]
         self.who_plays = PLAYER
         self.using_mouse = True
+        self.show_fps = False
         self.reset()
         
         
@@ -94,8 +97,8 @@ class Game():
                     self.play_agent()
         
     def play_step(self,action):
-        #print(self.gamepad.get_button(0))
         self.frame += 1
+        self.scan_gamepad()
         # 1. collect user input
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -112,9 +115,10 @@ class Game():
                     action[BLOCK_LEFT] = 1
                 elif event.key == pygame.K_m:
                     GLOBAL_MIXER.mute()
-                elif event.key == pygame.K_o:
+                elif event.key == pygame.K_F4:
                     pygame.display.toggle_fullscreen()
-                    pass
+                elif event.key == pygame.K_F3:
+                    self.show_fps = not self.show_fps
                 elif event.key == pygame.K_s:
                     if self.agent != None:
                         self.agent.save_checkpoint(False, "./model/manual", "./model/best2")
@@ -224,52 +228,44 @@ class Game():
                 reward = 30
             if n_shoots_left > n_enemies_left:
                 reward = -30
-            #print("1. reward", reward, "SHOOT_LEFT",danger_zone_left,danger_zone_right, "frame", self.frame)
         elif action_index == SHOOT_LEFT and shoot_ready and danger_zone_left < danger_zone_right:
             if n_shoots_right >= n_enemies_right:
                 reward = 30
             else:
                 reward = -60
-            #print("2. reward", reward, "SHOOT_LEFT",danger_zone_left,danger_zone_right, "frame", self.frame)
         if action_index == SHOOT_RIGHT and shoot_ready and  danger_zone_right > danger_zone_left:
             if n_shoots_right < n_enemies_right:
                 reward = 30
             if n_shoots_right > n_enemies_right:
                 reward = -30
-            #print("3. reward", reward, "SHOOT_RIGHT",danger_zone_left,danger_zone_right, "frame", self.frame)
         elif action_index == SHOOT_RIGHT and shoot_ready and danger_zone_right < danger_zone_left:
             if n_shoots_left >= n_enemies_left:
                 reward = 30
             else:
                 reward = -60
-            #print("4. reward", reward, "SHOOT_RIGHT",danger_zone_left,danger_zone_right, "frame", self.frame)
         if collision == ENEMY_DEAD:
             self.score += 1
         
             
         if action_index == BLOCK_LEFT and block_ready and enemy_shoot_left[DANGER_SHOOT_LEFT]:
             reward = 40
-            #print("5. reward", reward, "BLOCK_LEFT", "frame", self.frame)
         if action_index == BLOCK_RIGHT and block_ready and enemy_shoot_right[DANGER_SHOOT_RIGHT]:
             reward = 40
-            #print("6. reward", reward, "BLOCK_RIGHT", "frame", self.frame)
+            
         # 5b. check if the player has blocked a shoot
         if collision == SHOOT_BLOCKED:
             self.score += 1
-            #reward = 40
             shield.blocked = True
                 
         # 6a. check if the player shots without enemy
         if action_index == SHOOT_LEFT or action_index == SHOOT_RIGHT:
             if not shoot_ready:
                 reward += -10
-                #print("7. reward", reward, "SHOOT_ON_CD", "frame", self.frame)
         
         # 6b. check if the player blocks without enemy shoots
         if action_index == BLOCK_LEFT or action_index == BLOCK_RIGHT:
             if not block_ready and shield != None and shield.blocked == False:
                 reward = -10
-                #print("8. reward", reward, "BLOCK_ON_CD", "frame", self.frame)
             else:
                 if shield != None and collision != SHOOT_BLOCKED:
                     shoot_danger_left,shoot_danger_right = self.entity_manager.get_shoots_danger()
@@ -281,7 +277,7 @@ class Game():
                         reward = -50
                     else:
                         reward += 0
-                    #print("9. reward", reward, "BLOCK NO UTIL", "frame", self.frame)
+                        
         # 8. update ui and clock
         self._update_ui()
         self.clock.tick(FPS)
@@ -293,16 +289,9 @@ class Game():
         self.window.fill((40,40,40))
         self.window.blit(self.background,(0,0))
         self.screen.fill((255,255,255,0))   #clear the transparent background surface
-        #degub_tiles(self.screen)
-        debug_fps(self.window,self.clock,self.font)
-        
+        debug_fps(self.window,self.clock,self.font,self.show_fps)
         self.show_score()
-        
-        #pygame.draw.rect(screen,(255,0,0),player.rect,1)
-        #pygame.draw.rect(screen,(0,255,0),player.hitbox,1)
-        # limit framerate
-        #self.clock.tick(FPS)
-        #compute delta time
+        # compute delta time
         self.now_time = time.time()
         self.dt = self.now_time - self.prev_time
         self.prev_time = self.now_time
@@ -330,11 +319,13 @@ class Game():
         pass
     
     def scan_gamepad(self):
+        if self.gamepad != None:
+            return
         for i in range(pygame.joystick.get_count()):
             joystick = pygame.joystick.Joystick(i)
             joystick.init()
             print("Gamepad detected! -->", joystick.get_name())
-            return joystick
+            self.gamepad = joystick
     
     def menu(self):
         mouse_pos = pygame.mouse.get_pos()
@@ -359,7 +350,10 @@ class Game():
         QUIT_BUTTON = Button(image=None, pos=(1160, 730), 
                             text_input="X", font=close_font, base_color="White", hovering_color="#bd2f2f")
         
+        select_first_option = True
+        play_sound = False
         while self.zone == MENU:
+            self.scan_gamepad()
             self.window.fill((40,40,40))
             self.window.blit(self.background,(0,0))
             self.screen.fill((255,255,255,0))   #clear the transparent background surface
@@ -372,6 +366,8 @@ class Game():
             if mouse_pos != last_mouse_pos:
                 self.using_mouse = True
                 index_option_selected = 0
+                pygame.mouse.set_visible(True)
+                select_first_option = False
             last_mouse_pos = mouse_pos
             
             self.window.blit(title_1, title_rect_1)
@@ -380,7 +376,7 @@ class Game():
             
 
             for button in [PLAY_BUTTON, IA_BUTTON, QUIT_BUTTON]:
-                button.change_color(mouse_pos,options[index_option_selected],self.using_mouse)
+                button.change_color(mouse_pos,options[index_option_selected],self.using_mouse and not select_first_option,play_sound=play_sound)
                 button.update(self.window)
             
             for event in pygame.event.get():
@@ -403,12 +399,41 @@ class Game():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_m:
                         GLOBAL_MIXER.mute()
-                    elif event.key == pygame.K_o:
+                    elif event.key == pygame.K_F4:
                         pygame.display.toggle_fullscreen()
+                    elif event.key == pygame.K_F3:
+                        self.show_fps = not self.show_fps    
+                
+                    if event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
+                        if self.using_mouse == True:
+                            self.using_mouse = False
+                        pygame.mouse.set_visible(False)
+                        if options[index_option_selected] == "HUMAN":
+                            GLOBAL_MIXER.play(OPTION_SELECTED)
+                            self.zone = GAME
+                            self.who_plays = PLAYER
+                        elif options[index_option_selected] == "AGENT":
+                            GLOBAL_MIXER.play(OPTION_SELECTED)
+                            self.zone = GAME
+                            self.who_plays = AGENT
+                        elif options[index_option_selected] == "X":
+                            pygame.quit()
+                            sys.exit()
+                    elif event.key == pygame.K_RIGHT:
+                        if self.using_mouse == True:
+                            self.using_mouse = False
+                        else:
+                            index_option_selected = (index_option_selected + 1) % len(options)
+                    elif event.key == pygame.K_LEFT:
+                        if self.using_mouse == True:
+                            self.using_mouse = False
+                        else:
+                            index_option_selected = (index_option_selected - 1) % len(options) 
                         
                 if event.type == pygame.JOYBUTTONDOWN:
                     if self.using_mouse == True:
                         self.using_mouse = False
+                        pygame.mouse.set_visible(False)
                     elif event.button == pygame.CONTROLLER_BUTTON_A:
                         if options[index_option_selected] == "HUMAN":
                             GLOBAL_MIXER.play(OPTION_SELECTED)
@@ -423,6 +448,7 @@ class Game():
                             sys.exit()
                         
                 if event.type == pygame.JOYHATMOTION:
+                    pygame.mouse.set_visible(False)
                     if event.value == (1,0):
                         if self.using_mouse == True:
                             self.using_mouse = False
@@ -433,9 +459,10 @@ class Game():
                             self.using_mouse = False
                         else:
                             index_option_selected = (index_option_selected - 1) % len(options) 
-                        
+            play_sound = True
             self.entity_manager.update(self.dt,MENU)
             self.window.blit(self.screen,(0,80))
+            debug_fps(self.window,self.clock,self.font,self.show_fps)
             self.background = self.background_assets[self.bg][int(self.current_bg_sprite)%self.n_sprites_bg]
             self.current_bg_sprite += 15*self.dt
             GLOBAL_MIXER.play_next_menu_music_if_needed()
@@ -445,7 +472,7 @@ class Game():
     def pause(self):
         mouse_pos = pygame.mouse.get_pos()
         last_mouse_pos = mouse_pos
-        options_gamepad = ["RESUME","RESTART","FINISH"]
+        options = ["RESUME","RESTART","FINISH"]
         index_option_selected = 0 # "RESUME"
         title = self.score_font.render("Killem", 1, pygame.Color("WHITE"))
         title_rect = title.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT/4))
@@ -457,8 +484,9 @@ class Game():
         FINISH_BUTTON = Button(image=None, pos=(SCREEN_WIDTH/2 + SCREEN_WIDTH/4, SCREEN_HEIGHT - SCREEN_HEIGHT/10), 
                             text_input="FINISH", font=menu_button_font, base_color="White", hovering_color="#e66a6a")
         play_sound = False 
-        
+        select_first_option = True
         while self.zone == PAUSE:
+            self.scan_gamepad()
             self.window.fill((40,40,40))
             self.window.blit(self.background,(0,0))
             self.screen.fill((255,255,255,0))   #clear the transparent background surface
@@ -470,12 +498,14 @@ class Game():
             if mouse_pos != last_mouse_pos:
                 self.using_mouse = True
                 index_option_selected = 0
+                pygame.mouse.set_visible(True)
+                select_first_option = False
             last_mouse_pos = mouse_pos
 
             self.show_score()
 
             for button in [RESUME_BUTTON, RESTART_BUTTON, FINISH_BUTTON]:
-                button.change_color(mouse_pos,options_gamepad[index_option_selected],self.using_mouse,play_sound=play_sound)
+                button.change_color(mouse_pos,options[index_option_selected],self.using_mouse and not select_first_option,play_sound=play_sound)
                 button.update(self.window)
             
             for event in pygame.event.get():
@@ -499,9 +529,11 @@ class Game():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_m:
                         GLOBAL_MIXER.mute()
-                    if event.key == pygame.K_o:
+                    elif event.key == pygame.K_F4:
                         pygame.display.toggle_fullscreen()
-                    if event.key == pygame.K_ESCAPE:
+                    elif event.key == pygame.K_F3:
+                        self.show_fps = not self.show_fps
+                    elif event.key == pygame.K_ESCAPE:
                         self.paused[0] = not self.paused[0]
                         if not self.paused[0]:
                             GLOBAL_MIXER.set_unpaused_vol()
@@ -511,7 +543,36 @@ class Game():
                             GLOBAL_MIXER.set_paused_vol()
                             GLOBAL_MIXER.play(PAUSE_PRESSED)
                             self.zone = PAUSE
+                    elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
+                        pygame.mouse.set_visible(False)
+                        if self.using_mouse == True:
+                            self.using_mouse = False
+                        if options[index_option_selected] == "RESUME":
+                            self.paused[0] = not self.paused[0]
+                            GLOBAL_MIXER.play(UNPAUSE_PRESSED)
+                            GLOBAL_MIXER.set_unpaused_vol()
+                            self.zone = GAME
+                        elif options[index_option_selected] == "RESTART":
+                            GLOBAL_MIXER.play(OPTION_SELECTED)
+                            self.reset()
+                            self.zone = GAME
+                        elif options[index_option_selected] == "FINISH":
+                            GLOBAL_MIXER.play(BACK_PRESSED)
+                            self.reset()
+                            self.zone = MENU
+                    elif event.key == pygame.K_RIGHT:
+                        if self.using_mouse == True:
+                            self.using_mouse = False
+                        else:
+                            index_option_selected = (index_option_selected + 1) % len(options)
+                    elif event.key == pygame.K_LEFT:
+                        if self.using_mouse == True:
+                            self.using_mouse = False
+                        else:
+                            index_option_selected = (index_option_selected - 1) % len(options)
+                
                 if event.type == pygame.JOYBUTTONDOWN:
+                    pygame.mouse.set_visible(False)
                     if self.using_mouse == True:
                         self.using_mouse = False
                     if pygame.joystick.Joystick(0).get_button(7):
@@ -526,16 +587,16 @@ class Game():
                             self.zone = PAUSE
                                     
                     if event.button == pygame.CONTROLLER_BUTTON_A:
-                        if options_gamepad[index_option_selected] == "RESUME":
+                        if options[index_option_selected] == "RESUME":
                             self.paused[0] = not self.paused[0]
                             GLOBAL_MIXER.play(UNPAUSE_PRESSED)
                             GLOBAL_MIXER.set_unpaused_vol()
                             self.zone = GAME
-                        if options_gamepad[index_option_selected] == "RESTART":
+                        if options[index_option_selected] == "RESTART":
                             GLOBAL_MIXER.play(OPTION_SELECTED)
                             self.reset()
                             self.zone = GAME
-                        if options_gamepad[index_option_selected] == "FINISH":
+                        if options[index_option_selected] == "FINISH":
                             GLOBAL_MIXER.play(BACK_PRESSED)
                             self.reset()
                             self.zone = MENU
@@ -545,23 +606,25 @@ class Game():
                         GLOBAL_MIXER.set_unpaused_vol()
                         self.zone = GAME
                 if event.type == pygame.JOYHATMOTION:
+                    pygame.mouse.set_visible(False)
                     if event.value == (1,0):
                         if self.using_mouse == True:
                             self.using_mouse = False
                             index_option_selected = 0
                         else:
-                            index_option_selected = (index_option_selected + 1) % len(options_gamepad)
+                            index_option_selected = (index_option_selected + 1) % len(options)
                     if event.value == (-1,0):
                         if self.using_mouse == True:
                             self.using_mouse = False
                             index_option_selected = 0
                         else:
-                            index_option_selected = (index_option_selected - 1) % len(options_gamepad)   
+                            index_option_selected = (index_option_selected - 1) % len(options)   
                         
             play_sound = True
             
             self.entity_manager.update(self.dt,PAUSE)
             self.window.blit(self.screen,(0,80))
+            debug_fps(self.window,self.clock,self.font,self.show_fps)
             GLOBAL_MIXER.play_next_bg_music_if_needed()
             pygame.display.flip()
             self.clock.tick(FPS)
@@ -571,7 +634,7 @@ class Game():
         last_mouse_pos = mouse_pos
         GLOBAL_MIXER.play(GAME_OVER_SOUND)
         GLOBAL_MIXER.set_paused_vol(7)
-        options_gamepad = ["RESTART","MENU"]
+        options = ["RESTART","MENU"]
         index_option_selected = 0 # "RESTART"
         title = self.score_font.render("Killem", 1, pygame.Color("WHITE"))
         title_rect = title.get_rect(center=(SCREEN_WIDTH/2, SCREEN_HEIGHT/4))
@@ -588,9 +651,11 @@ class Game():
         
         MENU_BUTTON = Button(image=None, pos=(SCREEN_WIDTH/2 + SCREEN_WIDTH/4 - SCREEN_WIDTH/8, SCREEN_HEIGHT - SCREEN_HEIGHT/10), 
                             text_input="MENU", font=menu_button_font, base_color="White", hovering_color="#e66a6a")
-
+        select_first_option = True
         play_sound = False
         while self.zone == GAME_OVER:
+            debug_fps(self.window,self.clock,self.font,self.show_fps)
+            self.scan_gamepad()
             self.window.fill((40,40,40))
             self.window.blit(self.background,(0,0))
             self.screen.fill((255,255,255,0))   #clear the transparent background surface
@@ -602,13 +667,15 @@ class Game():
             if mouse_pos != last_mouse_pos:
                 self.using_mouse = True
                 index_option_selected = 0
+                pygame.mouse.set_visible(True)
+                select_first_option = False
             last_mouse_pos = mouse_pos
 
             self.show_score()
             
             
             for button in [MENU_BUTTON, PLAY_AGAIN_BUTTON]:
-                button.change_color(mouse_pos,options_gamepad[index_option_selected],self.using_mouse,play_sound=play_sound)
+                button.change_color(mouse_pos,options[index_option_selected],self.using_mouse and not select_first_option,play_sound=play_sound)
                 button.update(self.window)
             
             for event in pygame.event.get():
@@ -628,40 +695,68 @@ class Game():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_m:
                         GLOBAL_MIXER.mute()
-                    if event.key == pygame.K_o:
+                    if event.key == pygame.K_F4:
                         pygame.display.toggle_fullscreen()
+                    elif event.key == pygame.K_F3:
+                        self.show_fps = not self.show_fps
+
+                    elif event.key == pygame.K_RETURN or event.key == pygame.K_SPACE:
+                        pygame.mouse.set_visible(False)
+                        if self.using_mouse == True:
+                            self.using_mouse = False
+                        elif options[index_option_selected] == "RESTART":
+                            GLOBAL_MIXER.play(OPTION_SELECTED)
+                            self.reset()
+                            self.zone = GAME
+                        elif options[index_option_selected] == "MENU":
+                            GLOBAL_MIXER.play(BACK_PRESSED)
+                            self.reset()
+                            self.zone = MENU
+                    elif event.key == pygame.K_RIGHT:
+                        if self.using_mouse == True:
+                            self.using_mouse = False
+                        else:
+                            index_option_selected = (index_option_selected + 1) % len(options)
+                    elif event.key == pygame.K_LEFT:
+                        if self.using_mouse == True:
+                            self.using_mouse = False
+                        else:
+                            index_option_selected = (index_option_selected - 1) % len(options)
                     
                 if event.type == pygame.JOYBUTTONDOWN:
+                    pygame.mouse.set_visible(False)
                     if self.using_mouse == True:
                         self.using_mouse = False
                     if event.button == pygame.CONTROLLER_BUTTON_A:
-                            if options_gamepad[index_option_selected] == "RESTART":
+                            if options[index_option_selected] == "RESTART":
                                 GLOBAL_MIXER.play(OPTION_SELECTED)
                                 self.reset()
                                 self.zone = GAME
-                            if options_gamepad[index_option_selected] == "MENU":
+                            if options[index_option_selected] == "MENU":
                                 GLOBAL_MIXER.play(BACK_PRESSED)
                                 self.reset()
                                 self.zone = MENU
                 if event.type == pygame.JOYHATMOTION:
+                    pygame.mouse.set_visible(False)
                     if event.value == (1,0):
                         if self.using_mouse == True:
                             self.using_mouse = False
                             index_option_selected = 0
                         else:
-                            index_option_selected = (index_option_selected + 1) % len(options_gamepad)
+                            index_option_selected = (index_option_selected + 1) % len(options)
                     if event.value == (-1,0):
                         if self.using_mouse == True:
                             self.using_mouse = False
                             index_option_selected = 0
                         else:
-                            index_option_selected = (index_option_selected - 1) % len(options_gamepad)     
+                            index_option_selected = (index_option_selected - 1) % len(options)     
             
             play_sound = True
             self.entity_manager.update(self.dt,GAME_OVER)
             self.window.blit(self.screen,(0,80))
             self.window.blit(game_over_font_label_1, game_over_font_rect_1)
             self.window.blit(game_over_font_label, game_over_font_rect)
+            debug_fps(self.window,self.clock,self.font,self.show_fps)
             GLOBAL_MIXER.play_next_bg_music_if_needed()
             pygame.display.flip()
             self.clock.tick(FPS)
@@ -669,9 +764,8 @@ class Game():
     def play_agent(self):
         self.agent = Agent()
         self.agent.n_games, self.agent.record, self.agent.total_score = self.agent.load_checkpoint("./model/manual/checkpoint.pth",self.agent.model,self.agent.trainer.optimizer)
-        # agent.n_games, agent.record, agent.total_score = agent.load_checkpoint("./model/manual/checkpoint.pth",agent.model,agent.trainer.optimizer)
         while self.zone == GAME:
-            
+            self.scan_gamepad()
             # get old state
             state_old = self.agent.get_state(self)
 
@@ -679,13 +773,7 @@ class Game():
             final_move = self.agent.get_action(state_old)
 
             # perform move and get new state
-            reward, done, score = self.play_step(final_move)
-            if reward != -1 and reward != 0 and reward != -10:
-                print(reward)
-                pass
-            
-            
-            
+            reward, done, score = self.play_step(final_move) 
     
     def train_agent(self):
         plot_scores = []
@@ -735,5 +823,4 @@ class Game():
                     total_score += score
                     mean_score = total_score / self.agent.n_games
                     plot_mean_scores.append(mean_score)
-                    plot(plot_scores, plot_mean_scores)
 from agent.agent import Agent
